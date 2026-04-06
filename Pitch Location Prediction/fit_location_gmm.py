@@ -8,7 +8,7 @@ from sklearn.mixture import GaussianMixture
 
 
 CSV_DIR   = "../csv data"
-YEARS     = [2021, 2022, 2023, 2024]
+YEARS     = [2021, 2022, 2023, 2024, 2025]
 OUT_PATH  = "artifacts/location_gmm.pkl"
 
 # Number of GMM components per pitch type.
@@ -30,11 +30,11 @@ N_COMPONENTS_OVERRIDE = {
     "CH": 4,
     "KN": 3,
     "EP": 3,
+    "FO": 3,
 }
 
 # Normalise a few aliases so they match training-time merges.
 PITCH_MERGE = {
-    "FO": "FS",
     "SF": "FS",  # split-finger → splitter family (same merge as build_pitchlocation_dataset.py)
 }
 
