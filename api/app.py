@@ -33,7 +33,6 @@ def to_py(x):
 
 # Keep repertoire pitch codes consistent with training (e.g., FO -> FS)
 PITCH_MERGE = {
-    "FO": "FS",  # forkball -> splitter family
     "SF": "FS",  # split-finger -> splitter family (optional)
 }
 

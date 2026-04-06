@@ -5,7 +5,7 @@ from sklearn.preprocessing import LabelEncoder
 
 CSV_DIR = "../csv data"
 OUT_DIR = "../artifacts/shared"
-YEARS = [2021, 2022, 2023, 2024]
+YEARS = [2021, 2022, 2023, 2024, 2025]
 
 os.makedirs(OUT_DIR, exist_ok=True)
 

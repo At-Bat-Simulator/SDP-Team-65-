@@ -7,7 +7,7 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder
 SEQUENCE_LEN = 5
 
 # Which raw CSVs to load
-YEARS = [2021, 2022, 2023, 2024]
+YEARS = [2021, 2022, 2023, 2024, 2025]
 
 SHARED_DIR = "../artifacts/shared/" 
 
@@ -29,13 +29,12 @@ def preprocess(df):
     ]
 
     PITCH_MERGE = {
-        "FO": "FS",  # forkball -> splitter family
         "SF": "FS",  # split-finger -> splitter family (optional)
     }
 
     df["pitch_type"] = df["pitch_type"].astype(str).str.upper().replace(PITCH_MERGE)
 
-    common_pitches = ["FF", "SL", "SI", "CH", "CU", "FC", "ST", "FS"]
+    common_pitches = ["FF", "SL", "SI", "CH", "CU", "FC", "ST", "FS", "FO"]
 
     df = df.dropna(subset=["pitch_type", "stand", "p_throws", "zone"])
     df = df[df["pitch_type"].isin(common_pitches)]

@@ -5,7 +5,7 @@ import pandas as pd
 from pybaseball import playerid_reverse_lookup
 
 CSV_DIR = "csv data"
-YEARS = [2021, 2022, 2023, 2024]
+YEARS = [2021, 2022, 2023, 2024, 2025]
 OUT_PATH = os.path.join("artifacts", "shared", "player_names.json")
 
 os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)

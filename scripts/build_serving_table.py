@@ -3,7 +3,7 @@ import pickle
 import pandas as pd
 
 CSV_DIR = "csv data"
-YEARS = [2021, 2022, 2023, 2024]
+YEARS = [2021, 2022, 2023, 2024, 2025]
 
 SHARED_DIR = "artifacts/shared"
 OUT_DIR = "artifacts/serving"
