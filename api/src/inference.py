@@ -513,21 +513,44 @@ def predict_next(
     )[0]
     contact_idx = int(np.argmax(ct_probs))
     contact_outcome = artifacts["contact_classes"][contact_idx]
-    exit_velocity = None
-    launch_angle = None
-    if contact_outcome == "fair":
-        evla_loc_scaled = artifacts["evla_loc_scaler"].transform(loc_raw)
-        evla_ctx_scaled = artifacts["evla_ctx_scaler"].transform(ctx_arr_raw)
-        ev_pred_scaled = artifacts["evla_model"].predict(
-            [ct_onehot, evla_loc_scaled, evla_ctx_scaled], verbose=0
-        )
-        ev_la_real = artifacts["evla_target_scaler"].inverse_transform(ev_pred_scaled)
-        exit_velocity = round(float(ev_la_real[0, 0]), 1)
-        launch_angle = round(float(ev_la_real[0, 1]), 1)
     contact_probs = {
         artifacts["contact_classes"][i]: float(ct_probs[i])
         for i in range(len(ct_probs))
     }
+    exit_velocity = None
+    launch_angle = None
+    if contact_outcome == "fair":
+        EVLA_SEQ_LEN = 3
+
+        # Build sequence: last 3 rows of serving_window, extract EV/LA features
+        evla_window = serving_window.iloc[-EVLA_SEQ_LEN:]
+        evla_sub = ensure_columns(evla_window.copy(), artifacts["evla_features"])
+        nf = len(artifacts["evla_features"])
+        evla_seq_raw = evla_sub.values.astype(np.float32)
+        if len(evla_seq_raw) < EVLA_SEQ_LEN:
+            pad = np.zeros((EVLA_SEQ_LEN - len(evla_seq_raw), nf), dtype=np.float32)
+            evla_seq_raw = np.vstack([pad, evla_seq_raw])
+        evla_seq_scaled = artifacts["evla_scaler_X"].transform(evla_seq_raw)
+        evla_seq_in = evla_seq_scaled[np.newaxis, :, :]  # (1, 3, nf)
+
+        # Pitcher/batter IDs (scalar)
+        evla_p_id = np.array([p_idx], dtype=np.int32)
+        evla_b_id = np.array([b_idx], dtype=np.int32)
+
+        # 14-dim pitch type one-hot
+        evla_pt = np.zeros((1, len(artifacts["evla_pitch_types"])), dtype=np.float32)
+        if str(pt_pred) in artifacts["evla_pitch_types"]:
+            evla_pt[0, artifacts["evla_pitch_types"].index(str(pt_pred))] = 1.0
+
+        # Location (already computed above)
+        evla_loc_scaled = artifacts["evla_loc_scaler"].transform(loc_raw)
+
+        ev_pred_scaled = artifacts["evla_model"].predict(
+            [evla_seq_in, evla_p_id, evla_b_id, evla_pt, evla_loc_scaled], verbose=0
+        )
+        ev_la_real = artifacts["evla_target_scaler"].inverse_transform(ev_pred_scaled)
+        exit_velocity = round(float(ev_la_real[0, 0]), 1)
+        launch_angle  = round(float(ev_la_real[0, 1]), 1)
 
 
 

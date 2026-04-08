@@ -136,8 +136,8 @@ plt.ylabel("plate_z")
 plt.legend()
 plt.title("Pitch Location True vs Predicted")
 plt.tight_layout()
-plt.show()
-
 out_path = os.path.join(ART, "pitch_location_model.keras")
 model.save(out_path)
 print(f"\nSaved model: {out_path}")
+
+plt.show()

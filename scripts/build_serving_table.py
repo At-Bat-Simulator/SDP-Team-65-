@@ -34,7 +34,7 @@ needed_cols = [
     "on_1b","on_2b","on_3b",
     "bat_score","fld_score",
     "stand","p_throws",
-    "plate_x","plate_z", "release_speed",
+    "plate_x","plate_z", "release_speed", "launch_speed", "launch_angle",
 ]
 df = df[[c for c in needed_cols if c in df.columns]].copy()
 
@@ -53,6 +53,18 @@ for base in ["on_1b","on_2b","on_3b"]:
         df[base] = df[base].notna().astype(int)
     else:
         df[base] = 0
+
+# Per-player avg EV/LA for EV/LA sequence features
+df["batter_avg_la"]  = df.groupby("batter")["launch_angle"].transform("mean")
+df["batter_avg_ev"]  = df.groupby("batter")["launch_speed"].transform("mean")
+df["pitcher_avg_la"] = df.groupby("pitcher")["launch_angle"].transform("mean")
+df["pitcher_avg_ev"] = df.groupby("pitcher")["launch_speed"].transform("mean")
+for col in ["batter_avg_la","batter_avg_ev","pitcher_avg_la","pitcher_avg_ev"]:
+    df[col] = df[col].fillna(df[col].median())
+
+# Previous pitch location within at-bat (for EV/LA sequence)
+df["prev_plate_x"] = df.groupby(["pitcher","game_pk","at_bat_number"])["plate_x"].shift(1).fillna(0.0)
+df["prev_plate_z"] = df.groupby(["pitcher","game_pk","at_bat_number"])["plate_z"].shift(1).fillna(0.0)
 
 df["zone"] = df["zone"].fillna(-1)
 df["stand"] = df["stand"].fillna("R")

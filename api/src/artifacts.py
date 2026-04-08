@@ -14,9 +14,13 @@ def load_all(PT_DIR, LOC_DIR, ST_DIR, CT_DIR, EVLA_DIR, SHARED_DIR, gmm_path=Non
     contact_loc_scaler = pickle.load(open(CT_DIR + "loc_scaler.pkl", "rb"))
     contact_ctx_scaler = pickle.load(open(CT_DIR + "ctx_scaler.pkl", "rb"))
     evla_model = load_model(EVLA_DIR + "ev_model.keras")
-    evla_loc_scaler = pickle.load(open(EVLA_DIR + "loc_scaler.pkl", "rb"))
-    evla_ctx_scaler = pickle.load(open(EVLA_DIR + "ctx_scaler.pkl", "rb"))
+    evla_loc_scaler    = pickle.load(open(EVLA_DIR + "loc_scaler.pkl",    "rb"))
+    evla_scaler_X      = pickle.load(open(EVLA_DIR + "scaler_X.pkl",      "rb"))
     evla_target_scaler = pickle.load(open(EVLA_DIR + "target_scaler.pkl", "rb"))
+    evla_features      = pickle.load(open(EVLA_DIR + "features.pkl",      "rb"))
+    evla_pitch_types   = pickle.load(open(EVLA_DIR + "pitch_types.pkl",   "rb"))
+
+    
 
 
 
@@ -76,9 +80,12 @@ def load_all(PT_DIR, LOC_DIR, ST_DIR, CT_DIR, EVLA_DIR, SHARED_DIR, gmm_path=Non
         "contact_pitch_types": contact_pitch_types,
         "contact_loc_scaler":  contact_loc_scaler,
         "contact_ctx_scaler":  contact_ctx_scaler,
-        "evla_model": evla_model,
-        "evla_loc_scaler": evla_loc_scaler,
-        "evla_ctx_scaler": evla_ctx_scaler,
+        "evla_model":          evla_model,
+        "evla_loc_scaler":    evla_loc_scaler,
+        "evla_scaler_X":      evla_scaler_X,
         "evla_target_scaler": evla_target_scaler,
+        "evla_features":      evla_features,
+        "evla_pitch_types":   evla_pitch_types,
+
 
     }
