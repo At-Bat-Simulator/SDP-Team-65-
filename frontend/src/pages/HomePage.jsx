@@ -142,16 +142,12 @@ export default function HomePage() {
 
   const formatPitcherLabel = (option, { context }) => {
     if (context === "value") return option.label;
-    return option.throws
-      ? `${option.label} (${option.throws})`
-      : option.label;
+    return option.throws ? `${option.label} (${option.throws})` : option.label;
   };
 
   const formatBatterLabel = (option, { context }) => {
     if (context === "value") return option.label;
-    return option.bats
-      ? `${option.label} (${option.bats})`
-      : option.label;
+    return option.bats ? `${option.label} (${option.bats})` : option.label;
   };
 
   const canPlay = Boolean(pitcher && batter);
@@ -343,14 +339,11 @@ export default function HomePage() {
           Play Ball!
         </button>
 
-        <div style={{ textAlign: "center", marginTop: "10px", width: "100%" }}>
+        <div style={{ textAlign: "center", marginTop: "40px", width: "100%" }}>
           <Link to="/readme">
-            <button type="button" 
-            >
-              README
-            </button>
+            <button type="button">README</button>
           </Link>
-        </div>        
+        </div>
       </div>
     </div>
   );

@@ -59,8 +59,12 @@ function prettyHitType(hitType) {
       return "Double!";
     case "single":
       return "Single";
-    case "out":
-      return "Out";
+    case "groundout":
+      return "Groundout";
+    case "flyout":
+      return "Flyout";
+    case "popup":
+      return "Popup";
     default:
       return "Ball in Play!";
   }
@@ -629,7 +633,21 @@ export default function SimulatorPage() {
                     >
                       <span className="ph-num">#{i + 1}</span>
                       <span
-                        className={`ph-result ${isFair ? "fair" : isFoul ? "foul" : isStrikeout ? "strikeout" : isBall ? "ball" : isStrike ? "strike" : ""}`}
+                        className={`ph-result ${
+                          isFair
+                            ? FAIR_OUTS.has(p.hitType)
+                              ? "out"
+                              : "hit"
+                            : isFoul
+                              ? "foul"
+                              : isStrikeout
+                                ? "strikeout"
+                                : isBall
+                                  ? "ball"
+                                  : isStrike
+                                    ? "strike"
+                                    : ""
+                        }`}
                       >
                         {isFair ? prettyHitType(p.hitType) : result || "—"}
                       </span>

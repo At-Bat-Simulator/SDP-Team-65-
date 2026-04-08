@@ -156,10 +156,6 @@ def apply_targeting_bias(
     b = 0 if balls is None else int(balls)
     s = 0 if strikes is None else int(strikes)
 
-    # 3-ball counts: attack zone more 
-    if b >= 3:
-        mean_x = 0.65 * mean_x  # closer to middle
-        mean_z = 0.75 * mean_z + 0.25 * Z_CENTER
 
     # 2-strike counts: expand 
     if s >= 2:
@@ -434,7 +430,7 @@ def predict_next(
         if _gmm_dict:
             samp_x, samp_z = sample_location_gmm(
                 mean_x, mean_z, str(pt_pred), _gmm_dict, rng,
-                component_temperature=0.35,  # blend: model guidance + real mixture spread
+                component_temperature=0.5,  # blend: model guidance + real mixture spread
             )
         else:
             # Legacy fallback
@@ -570,15 +566,15 @@ def predict_next(
         # Rule-based hit type classifier
         ev, la = exit_velocity, launch_angle
         if la > 45:
-            hit_type = "out"                                          # popup
+            hit_type = "popup"                                          
         elif ev >= 98 and 25 <= la <= 45:
             hit_type = "home_run"
         elif la > 25 and ev < 93:
-            hit_type = "out"                                          # fly ball out
+            hit_type = "flyout"                                          # fly ball out
         elif la < 0:
             # Ground ball - probabilistic based on Statcast hit rates
             hit_prob = 0.05 if ev < 80 else (0.17 if ev < 95 else 0.15)
-            hit_type = "single" if spray_rng.random() < hit_prob else "out"
+            hit_type = "single" if spray_rng.random() < hit_prob else "groundout"
         elif ev >= 93 and 10 <= la <= 25:
             hit_type = "double"
         elif ev >= 88 and 10 <= la <= 25 and spray_direction in ("pull", "oppo"):
