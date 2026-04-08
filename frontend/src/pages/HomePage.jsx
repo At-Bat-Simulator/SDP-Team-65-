@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import Select from "react-select";
 import { getPlayers } from "../api";
@@ -341,6 +342,15 @@ export default function HomePage() {
         >
           Play Ball!
         </button>
+
+        <div style={{ textAlign: "center", marginTop: "10px", width: "100%" }}>
+          <Link to="/readme">
+            <button type="button" 
+            >
+              README
+            </button>
+          </Link>
+        </div>        
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/simulator" element={<SimulatorPage />} />
+        <Route path="/readme" element={<ModelDocs />} />
       </Routes>
     </BrowserRouter>
   );
