@@ -353,6 +353,8 @@ def api_matchup_history():
                 "result_label": result_label,
                 "balls": int(row["balls"]) if "balls" in row else None,
                 "strikes": int(row["strikes"]) if "strikes" in row else None,
+                "exit_velocity": round(float(row["launch_speed"]), 1) if pd.notna(row.get("launch_speed")) else None,
+                "launch_angle": round(float(row["launch_angle"]), 1) if pd.notna(row.get("launch_angle")) else None,
             })
 
         game_date = str(last_game)[:10] if last_game else None

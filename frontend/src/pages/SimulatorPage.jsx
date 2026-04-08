@@ -104,6 +104,7 @@ export default function SimulatorPage() {
   const [isSwinging, setIsSwinging] = useState(false);
   const [pitcherPhase, setPitcherPhase] = useState("set"); // "set" | "windup" | "throwing"
   const [atBatOver, setAtBatOver] = useState(null); // null | "walk" | "strikeout" | "fair"
+  const [pitchLoading, setPitchLoading] = useState(false);
 
   useEffect(() => {
     const pitcherId =
@@ -241,6 +242,8 @@ export default function SimulatorPage() {
   }
 
   async function onNextPitch() {
+    if (pitchLoading) return; //belt-and-suspenders guard
+    setPitchLoading(true);
     animatePitcher();
     // if we're not at the end of history, just move forward
     if (pitchIndex < pitches.length - 1) {
@@ -333,6 +336,8 @@ export default function SimulatorPage() {
     else if (r === "Strikeout Looking") setAtBatOver("strikeout_looking");
     else if (r === "Ball" && liveCount.balls === 3) setAtBatOver("walk");
     else if (r === "Fair") setAtBatOver("fair");
+
+    setTimeout(() => setPitchLoading(false), 20 + TRAVEL_MS + 50);
   }
 
   function resetAtBat() {
@@ -787,7 +792,11 @@ export default function SimulatorPage() {
             <div className="controls">
               <div className="controls-inner">
                 {!atBatOver && (
-                  <button className="btn primary" onClick={onNextPitch}>
+                  <button
+                    className="btn primary"
+                    onClick={onNextPitch}
+                    disabled={pitchLoading}
+                  >
                     Next Pitch
                   </button>
                 )}
@@ -900,6 +909,13 @@ export default function SimulatorPage() {
                     <span className="ph-type">
                       {prettyPitchType(p.pitch_type)}
                     </span>
+                    {p.exit_velocity != null &&
+                      p.launch_angle != null &&
+                      p.result_cat !== "foul" && (
+                        <span className="ph-evla">
+                          {p.exit_velocity} mph · {p.launch_angle}°
+                        </span>
+                      )}
                   </div>
                 ))}
               </div>
