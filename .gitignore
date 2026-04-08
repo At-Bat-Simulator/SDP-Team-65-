@@ -8,3 +8,4 @@ statcast_full_2025.csv
 __pycache__/
 *.pyc
 *.npy
+artifacts/serving/serving_table.parquet

@@ -1,6 +1,7 @@
 import os
 import pickle
 import pandas as pd
+import numpy as np
 
 CSV_DIR = "csv data"
 YEARS = [2021, 2022, 2023, 2024, 2025]
@@ -35,6 +36,7 @@ needed_cols = [
     "bat_score","fld_score",
     "stand","p_throws",
     "plate_x","plate_z", "release_speed", "launch_speed", "launch_angle",
+    "hc_x", "hc_y",
 ]
 df = df[[c for c in needed_cols if c in df.columns]].copy()
 
@@ -65,6 +67,36 @@ for col in ["batter_avg_la","batter_avg_ev","pitcher_avg_la","pitcher_avg_ev"]:
 # Previous pitch location within at-bat (for EV/LA sequence)
 df["prev_plate_x"] = df.groupby(["pitcher","game_pk","at_bat_number"])["plate_x"].shift(1).fillna(0.0)
 df["prev_plate_z"] = df.groupby(["pitcher","game_pk","at_bat_number"])["plate_z"].shift(1).fillna(0.0)
+
+#Per batter spray direction tendencies (pull%/ center%/ oppo%)
+spray_mask = df["hc_x"].notna() & df["hc_y"].notna()
+df.loc[spray_mask, "spray_angle"] = np.degrees(
+    np.arctan((df.loc[spray_mask, "hc_x"] - 125.42) / (198.27 - df.loc[spray_mask, "hc_y"]))
+)
+rh = spray_mask & (df["stand"] == "R")
+lh = spray_mask & (df["stand"] == "L")
+df["spray_dir"] = None
+df.loc[rh & (df["spray_angle"] <  -15), "spray_dir"] = "pull"
+df.loc[rh & (df["spray_angle"] >   15), "spray_dir"] = "oppo"
+df.loc[rh & (df["spray_angle"] >= -15) & (df["spray_angle"] <= 15), "spray_dir"] = "center"
+df.loc[lh & (df["spray_angle"] >   15), "spray_dir"] = "pull"
+df.loc[lh & (df["spray_angle"] <  -15), "spray_dir"] = "oppo"
+df.loc[lh & (df["spray_angle"] >= -15) & (df["spray_angle"] <= 15), "spray_dir"] = "center"
+
+spray_agg = (
+    df[df["spray_dir"].notna()]
+    .groupby(["batter", "spray_dir"])
+    .size()
+    .unstack(fill_value=0)
+)
+spray_pct = spray_agg.div(spray_agg.sum(axis=1), axis=0)
+spray_pct.columns = [f"batter_{c}_pct" for c in spray_pct.columns]
+df = df.merge(spray_pct.reset_index(), on="batter", how="left")
+for col in ["batter_pull_pct", "batter_center_pct", "batter_oppo_pct"]:
+    if col not in df.columns:
+        df[col] = 1/3
+    df[col] = df[col].fillna(df[col].median())
+df.drop(columns=["spray_angle", "spray_dir", "hc_x", "hc_y"], inplace=True, errors="ignore")
 
 df["zone"] = df["zone"].fillna(-1)
 df["stand"] = df["stand"].fillna("R")

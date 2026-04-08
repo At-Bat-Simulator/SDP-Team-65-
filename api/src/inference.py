@@ -519,6 +519,10 @@ def predict_next(
     }
     exit_velocity = None
     launch_angle = None
+    exit_velocity = None
+    launch_angle = None
+    spray_direction = None
+    hit_type = None
     if contact_outcome == "fair":
         EVLA_SEQ_LEN = 3
 
@@ -552,6 +556,36 @@ def predict_next(
         exit_velocity = round(float(ev_la_real[0, 0]), 1)
         launch_angle  = round(float(ev_la_real[0, 1]), 1)
 
+        #Sample spray direction from batter tendency
+        spray_rng = np.random.default_rng(rng_seed)
+        pull_pct   = float(last_row["batter_pull_pct"])   if "batter_pull_pct"   in last_row.index else 1/3
+        center_pct = float(last_row["batter_center_pct"]) if "batter_center_pct" in last_row.index else 1/3
+        oppo_pct   = float(last_row["batter_oppo_pct"])   if "batter_oppo_pct"   in last_row.index else 1/3
+        total = pull_pct + center_pct + oppo_pct
+        if total > 0:
+            pull_pct /= total; center_pct /= total; oppo_pct /= total
+        spray_direction = str(spray_rng.choice(["pull", "center", "oppo"],
+                                                p=[pull_pct, center_pct, oppo_pct]))
+        
+        # Rule-based hit type classifier
+        ev, la = exit_velocity, launch_angle
+        if la > 45:
+            hit_type = "out"                                          # popup
+        elif ev >= 98 and 25 <= la <= 45:
+            hit_type = "home_run"
+        elif la > 25 and ev < 93:
+            hit_type = "out"                                          # fly ball out
+        elif la < 0:
+            # Ground ball - probabilistic based on Statcast hit rates
+            hit_prob = 0.05 if ev < 80 else (0.17 if ev < 95 else 0.15)
+            hit_type = "single" if spray_rng.random() < hit_prob else "out"
+        elif ev >= 93 and 10 <= la <= 25:
+            hit_type = "double"
+        elif ev >= 88 and 10 <= la <= 25 and spray_direction in ("pull", "oppo"):
+            hit_type = "double"
+        else:
+            hit_type = "single"
+
 
 
 
@@ -570,5 +604,7 @@ def predict_next(
         "contact_probs": contact_probs,
         "exit_velocity": exit_velocity,
         "launch_angle": launch_angle,
+        "spray_direction": spray_direction,
+        "hit_type": hit_type,
 
     }

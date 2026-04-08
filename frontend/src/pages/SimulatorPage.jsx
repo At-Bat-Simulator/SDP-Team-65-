@@ -51,6 +51,21 @@ function prettyPitchType(code) {
   return PITCH_TYPE_NAMES[c] ?? c;
 }
 
+function prettyHitType(hitType) {
+  switch (hitType) {
+    case "home_run":
+      return "Home Run!";
+    case "double":
+      return "Double!";
+    case "single":
+      return "Single";
+    case "out":
+      return "Out";
+    default:
+      return "Ball in Play!";
+  }
+}
+
 // Strike-zone helpers
 const PLATE_HALF_FT = 17 / 12 / 2; // 0.7083 ft
 
@@ -289,6 +304,8 @@ export default function SimulatorPage() {
           pitchVelocity: api.pitch_velocity ?? null,
           exitVelocity: api.exit_velocity ?? null,
           launchAngle: api.launch_angle ?? null,
+          hitType: api.hit_type ?? null,
+          sprayDiection: api.spray_direction ?? null,
           // We derive Ball/Strike from the predicted location + hitter zone.
           //
           result: null,
@@ -614,7 +631,7 @@ export default function SimulatorPage() {
                       <span
                         className={`ph-result ${isFair ? "fair" : isFoul ? "foul" : isStrikeout ? "strikeout" : isBall ? "ball" : isStrike ? "strike" : ""}`}
                       >
-                        {result || "—"}
+                        {isFair ? prettyHitType(p.hitType) : result || "—"}
                       </span>
                       <span className="ph-type">
                         {prettyPitchType(p.pitchType)}
@@ -784,7 +801,7 @@ export default function SimulatorPage() {
                 {atBatOver === "strikeout_swinging" && "Strikeout Swinging!"}
                 {atBatOver === "strikeout_looking" && "Strikeout Looking!"}
                 {atBatOver === "walk" && "Walk!"}
-                {atBatOver === "fair" && "Ball in Play!"}
+                {atBatOver === "fair" && prettyHitType(currentPitch?.hitType)}
               </div>
             )}
 
