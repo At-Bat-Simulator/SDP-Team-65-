@@ -318,7 +318,7 @@ export default function HomePage() {
         </div>
 
         <button
-          className={`play-button ${canPlay ? "" : "disabled"}`}
+          className={`btn primary ${!canPlay ? "disabled" : ""}`}
           disabled={!canPlay}
           onClick={() => {
             if (!canPlay) return;
@@ -341,7 +341,9 @@ export default function HomePage() {
 
         <div style={{ textAlign: "center", marginTop: "40px", width: "100%" }}>
           <Link to="/readme">
-            <button type="button">README</button>
+            <button type="button" className="btn ghost">
+              README
+            </button>
           </Link>
         </div>
       </div>

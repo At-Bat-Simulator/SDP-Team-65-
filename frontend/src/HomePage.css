@@ -147,3 +147,34 @@
   bottom: 0;
   right: 0;
 }
+
+.btn {
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: #1f1f1f;
+  color: #f5f5f5;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn:hover {
+  background: #2a2a2a;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn.primary {
+  background: #2b2b2b;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.btn.primary:hover {
+  background: #3a3a3a;
+}
+
+.btn.ghost {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.2);
+}
