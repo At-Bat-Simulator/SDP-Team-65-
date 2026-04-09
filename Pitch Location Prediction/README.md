@@ -18,7 +18,7 @@ Predicts where a pitch will cross home plate (`plate_x`, `plate_z` in feet) give
 
 ## Dataset Builder
 
-**Input:** Raw Statcast CSVs (2021–2024) + `pitch_type_probs.npy` from the pitch type model.
+**Input:** Raw Statcast CSVs (2021–2025) + `pitch_type_probs.npy` from the pitch type model.
 
 **Preprocessing steps:**
 - Drop rows with missing `plate_x`, `plate_z`, or required features
@@ -105,7 +105,7 @@ MSE implicitly assumes a fixed, equal uncertainty for every prediction. Gaussian
 
 The LSTM predicts a mean location that tends to regress toward the center of the strike zone — a known limitation of sequence-to-sequence regression models. Real pitchers don't throw everything down the middle; they work edges, bury breaking balls, and climb the ladder with fastballs.
 
-To capture the true **shape** of a pitcher's location distribution, we fit a Gaussian Mixture Model (GMM) separately on the full 2021–2024 Statcast dataset, grouped by pitch type:
+To capture the true **shape** of a pitcher's location distribution, we fit a Gaussian Mixture Model (GMM) separately on the full 2021–2025 Statcast dataset, grouped by pitch type:
 
 ```
 GMM[pitch_type] ~ GaussianMixture(
@@ -133,7 +133,7 @@ Each component captures a distinct "target region" a pitcher throws to — for e
 |---|---|
 | FF | 53.7% |
 | SI | 54.8% |
-| FC | 50.9% |
+| FC | 50.9% |     **MUST FIX**
 | SL | 46.8% |
 | CU | 46.5% |
 | CH | 40.6% |
@@ -149,16 +149,15 @@ At inference time, the pipeline is:
 1. **LSTM predicts** `[mu_x, mu_z, log_var_x, log_var_z]` in scaled Y space
 2. **Inverse-transform** the mean back to feet
 3. **Apply targeting bias** — small heuristic nudges based on count + pitch type to correct for the model's tendency to predict near the center (e.g., 2-strike pitches pushed lower/to the edge)
-4. **GMM sampling with `component_temperature=0.35`:**
+4. **GMM sampling with `component_temperature=0.65`:**
    - Find the GMM component whose centroid is nearest to the LSTM's predicted mean (preserves directional intent)
-   - Blend: 65% weight on nearest component, 35% on full mixture weights
    - Sample `(plate_x, plate_z)` from the selected component's full covariance Gaussian
 
 **`component_temperature` explained:**
 
 - `0.0` = always pick the single nearest GMM component → model's directional signal is fully preserved, but no mixture diversity (too many pitches cluster in one spot)
 - `1.0` = sample purely from real mixture weights → fully realistic spread, but ignores what the LSTM predicted
-- `0.35` = blends both: the model guides *where* in the zone, the GMM provides realistic *spread and shape*
+- `0.65` = blends both: the model guides *where* in the zone, the GMM provides realistic *spread and shape*
 
 ---
 

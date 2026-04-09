@@ -17,7 +17,7 @@ Predicts the next pitch type a pitcher will throw given the last 5 pitches of co
 
 ## Dataset Builder
 
-**Input:** Raw Statcast CSVs (2021–2024), one per year.
+**Input:** Raw Statcast CSVs (2021–2025), one per year.
 
 **Preprocessing steps:**
 - Drop rows with missing required features
