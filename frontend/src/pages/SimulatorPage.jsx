@@ -600,7 +600,7 @@ export default function SimulatorPage() {
             </div>
 
             <div className="scoreboard-row baserunners">
-              <div className="label">BaseRunners</div>
+              <div className="label">Baserunners</div>
               <div className="bases-diamond" aria-label="Baserunners">
                 <span className={`base base-3b ${bases?.on3 ? "on" : ""}`} />
                 <span className={`base base-2b ${bases?.on2 ? "on" : ""}`} />
