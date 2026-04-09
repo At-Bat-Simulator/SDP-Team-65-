@@ -430,7 +430,7 @@ def predict_next(
         if _gmm_dict:
             samp_x, samp_z = sample_location_gmm(
                 mean_x, mean_z, str(pt_pred), _gmm_dict, rng,
-                component_temperature=0.5,  # blend: model guidance + real mixture spread
+                component_temperature=0.65,  # blend: model guidance + real mixture spread
             )
         else:
             # Legacy fallback

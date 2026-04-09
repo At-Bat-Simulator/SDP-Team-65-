@@ -51,6 +51,8 @@ function prettyPitchType(code) {
   return PITCH_TYPE_NAMES[c] ?? c;
 }
 
+const FAIR_OUTS = new Set(["popup", "flyout", "groundout"]);
+
 function prettyHitType(hitType) {
   switch (hitType) {
     case "home_run":
