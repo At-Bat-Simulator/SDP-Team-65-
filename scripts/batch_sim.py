@@ -81,6 +81,7 @@ def simulate_atbat(pitcher: dict, batter: dict) -> dict:
     pitches = []
     counts_seen = set()
     first_pitch_strike = None
+    hit_type_result = None
 
     while True:
         counts_seen.add((balls, strikes))
@@ -114,6 +115,7 @@ def simulate_atbat(pitcher: dict, batter: dict) -> dict:
         if swung:
             contact = classify_contact(contact_outcome)
             if contact == "fair":
+                hit_type = result.get("hit_type", "unknown")
                 pitch_record = {
                     "pitch_type": pitch_type,
                     "plate_x": plate_x,
@@ -122,9 +124,11 @@ def simulate_atbat(pitcher: dict, batter: dict) -> dict:
                     "in_zone": in_zone,
                     "outcome": "fair_ball",
                     "contact": "fair",
+                    "hit_type": hit_type,
                 }
                 pitches.append(pitch_record)
                 result_label = "in_play"
+                hit_type_result = hit_type
                 break
             elif contact == "foul":
                 if strikes < 2:
@@ -197,6 +201,7 @@ def simulate_atbat(pitcher: dict, batter: dict) -> dict:
         "pitcher_id": pitcher_id,
         "batter_id": batter_id,
         "result": result_label,
+        "hit_type": hit_type_result,
         "pitches": pitches,
         "pitch_count": len(pitches),
         "final_balls": balls,
@@ -302,6 +307,12 @@ def main():
         for c in ab["counts_seen"]:
             all_counts[c] += 1
 
+    # Hit type distribution (for in-play ABs)
+    hit_type_counts = defaultdict(int)
+    for ab in all_ab_results:
+        if ab["result"] == "in_play" and ab["hit_type"]:
+            hit_type_counts[ab["hit_type"]] += 1
+
     # Zone distribution
     total_in_zone = sum(1 for ab in all_ab_results for p in ab["pitches"] if p["in_zone"])
     zone_pct = total_in_zone / total_pitches if total_pitches else 0
@@ -356,6 +367,23 @@ def main():
     print(f"\n  By code:")
     for code, cnt in sorted(pitch_type_counts.items(), key=lambda x: -x[1]):
         print(f"    {code:<5}: {cnt:5d}  ({cnt/total_pitches*100:5.1f}%)")
+
+    print("\n--- HIT TYPE BREAKDOWN (of BIP) ---")
+    HITS = {"single", "double", "home_run"}
+    OUTS = {"popup", "flyout", "groundout"}
+    total_bip = sum(hit_type_counts.values())
+    if total_bip:
+        for ht in ["single", "double", "home_run", "popup", "flyout", "groundout", "unknown"]:
+            cnt = hit_type_counts.get(ht, 0)
+            if cnt:
+                pct_bip = cnt / total_bip * 100
+                pct_ab = cnt / total_ab * 100
+                label = "HIT" if ht in HITS else "OUT"
+                print(f"  {ht:<12}: {cnt:4d}  ({pct_bip:5.1f}% of BIP, {pct_ab:4.1f}% of AB)  [{label}]")
+        total_hits = sum(hit_type_counts.get(h, 0) for h in HITS)
+        total_outs = sum(hit_type_counts.get(o, 0) for o in OUTS)
+        print(f"\n  BABIP (hits/BIP excl HR): {(hit_type_counts.get('single',0)+hit_type_counts.get('double',0)) / max(total_bip - hit_type_counts.get('home_run',0), 1) * 100:.1f}%  [MLB ~30%]")
+        print(f"  HR/BIP                  : {hit_type_counts.get('home_run',0) / max(total_bip,1) * 100:.1f}%  [MLB ~3-4%]")
 
     print("\n--- SWING / CONTACT ---")
     print(f"  Overall swing rate      : {swing_rate*100:.1f}%")

@@ -169,6 +169,7 @@ export default function SimulatorPage() {
   const TRAVEL_MS = 450;
   const shouldAnimateRef = useRef(false);
   const animTimersRef = useRef([]);
+  const animRafRef = useRef(null);
   const [animDot, setAnimDot] = useState(null);
   const pitchNum = pitchIndex >= 0 ? pitchIndex + 1 : "__";
 
@@ -449,6 +450,7 @@ export default function SimulatorPage() {
   useEffect(() => {
     animTimersRef.current.forEach(clearTimeout);
     animTimersRef.current = [];
+    if (animRafRef.current) cancelAnimationFrame(animRafRef.current);
 
     if (!dot) {
       setAnimDot(null);
@@ -456,6 +458,7 @@ export default function SimulatorPage() {
     }
 
     const result = String(currentPitch?.result ?? "").toLowerCase();
+    const isFairOut = FAIR_OUTS.has(currentPitch?.hitType);
     const finalColor = result.startsWith("ball")
       ? "#6dde7e"
       : result.includes("strike")
@@ -463,7 +466,7 @@ export default function SimulatorPage() {
         : result.includes("foul")
           ? "#f0a040"
           : result.includes("fair")
-            ? "#4fc3f7"
+            ? isFairOut ? "#ff6b6b" : "#4fc3f7"
             : "rgba(255,255,255,0.95)";
 
     // History navigation: jump straight to final position + color, no animation
@@ -490,15 +493,17 @@ export default function SimulatorPage() {
       traveling: false,
     });
 
-    // Phase 2: one frame later, transition to plate position (still white)
-    const t1 = setTimeout(() => {
-      setAnimDot({
-        left: dot.left,
-        top: dot.top,
-        color: "rgba(255,255,255,0.95)",
-        traveling: true,
+    // Phase 2: next frame after paint, transition to plate position (still white)
+    animRafRef.current = requestAnimationFrame(() => {
+      animRafRef.current = requestAnimationFrame(() => {
+        setAnimDot({
+          left: dot.left,
+          top: dot.top,
+          color: "rgba(255,255,255,0.95)",
+          traveling: true,
+        });
       });
-    }, 20);
+    });
 
     // Phase 3: after travel completes, switch to landing color
     const t2 = setTimeout(() => {
@@ -517,10 +522,11 @@ export default function SimulatorPage() {
       setPitcherPhase("set");
     }, 20 + TRAVEL_MS);
 
-    animTimersRef.current = [t1, t2];
+    animTimersRef.current = [t2];
 
     return () => {
       animTimersRef.current.forEach(clearTimeout);
+      if (animRafRef.current) cancelAnimationFrame(animRafRef.current);
     };
   }, [dot]);
 
@@ -817,7 +823,7 @@ export default function SimulatorPage() {
             )}
 
             {atBatOver && (
-              <div className={`atbat-result-banner ${atBatOver}`}>
+              <div className={`atbat-result-banner ${atBatOver === "fair" && FAIR_OUTS.has(currentPitch?.hitType) ? "fair-out" : atBatOver}`}>
                 {atBatOver === "strikeout_swinging" && "Strikeout Swinging!"}
                 {atBatOver === "strikeout_looking" && "Strikeout Looking!"}
                 {atBatOver === "walk" && "Walk!"}

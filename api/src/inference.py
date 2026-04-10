@@ -563,25 +563,89 @@ def predict_next(
         spray_direction = str(spray_rng.choice(["pull", "center", "oppo"],
                                                 p=[pull_pct, center_pct, oppo_pct]))
         
-        # Rule-based hit type classifier
+    
+    if exit_velocity is not None and launch_angle is not None:
         ev, la = exit_velocity, launch_angle
-        if la > 45:
-            hit_type = "popup"                                          
-        elif ev >= 98 and 25 <= la <= 45:
-            hit_type = "home_run"
-        elif la > 25 and ev < 93:
-            hit_type = "flyout"                                          # fly ball out
-        elif la < 0:
-            # Ground ball - probabilistic based on Statcast hit rates
-            hit_prob = 0.05 if ev < 80 else (0.17 if ev < 95 else 0.15)
-            hit_type = "single" if spray_rng.random() < hit_prob else "groundout"
-        elif ev >= 93 and 10 <= la <= 25:
-            hit_type = "double"
-        elif ev >= 88 and 10 <= la <= 25 and spray_direction in ("pull", "oppo"):
-            hit_type = "double"
-        else:
-            hit_type = "single"
 
+        if ev >= 98 and 8 <= la <= 45:
+            r = spray_rng.random()
+            if r < 0.65:
+                hit_type = "home_run"
+            elif r < 0.85:
+                hit_type = "double"
+            else:
+                hit_type = "flyout"
+
+        elif ev >= 95 and 10 <= la <= 35:
+            r = spray_rng.random()
+            if r < 0.30:
+                hit_type = "home_run"
+            elif r < 0.65:
+                hit_type = "double"
+            elif r < 0.80:
+                hit_type = "single"
+            else:
+                hit_type = "flyout"
+
+        elif la > 50:
+            hit_type = "popup"
+
+        elif la >= 35:
+            if ev >= 90:
+                r = spray_rng.random()
+                if r < 0.30:
+                    hit_type = "home_run"
+                elif r < 0.85:
+                    hit_type = "flyout"
+                else:
+                    hit_type = "double"
+            else:
+                hit_type = "flyout" if spray_rng.random() < 0.95 else "home_run"
+
+        elif la >= 25:
+            if ev >= 93:
+                r = spray_rng.random()
+                if r < 0.30:
+                    hit_type = "flyout"
+                elif r < 0.60:
+                    hit_type = "double"
+                else:
+                    hit_type = "home_run"
+            elif ev >= 85:
+                hit_type = "double" if spray_rng.random() < 0.18 else "flyout"
+            else:
+                hit_type = "flyout"
+
+        elif la >= 10:
+            if ev >= 90:
+                r = spray_rng.random()
+                if r < 0.15:
+                    hit_type = "flyout"
+                elif r < 0.50 and spray_direction in ("pull", "oppo"):
+                    hit_type = "double"
+                else:
+                    hit_type = "single"
+            elif ev >= 80:
+                r = spray_rng.random()
+                if r < 0.30:
+                    hit_type = "flyout"
+                else:
+                    hit_type = "single"
+            else:
+                hit_type = "single" if spray_rng.random() < 0.55 else "flyout"
+
+        elif la >= 0:
+            hit_prob = 0.20 if ev >= 90 else 0.10
+            hit_type = "single" if spray_rng.random() < hit_prob else "groundout"
+
+        else:
+            if ev >= 95:
+                hit_prob = 0.22
+            elif ev >= 80:
+                hit_prob = 0.17
+            else:
+                hit_prob = 0.05
+            hit_type = "single" if spray_rng.random() < hit_prob else "groundout"
 
 
 
