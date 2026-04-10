@@ -175,11 +175,25 @@ At inference time, the pipeline is:
 
 ## Performance
 
-| Metric | Value |
-|---|---|
-| MAE plate_x | ~0.70 ft |
-| MAE plate_z | ~0.76 ft |
-| RMSE plate_x | ~0.88 ft |
-| RMSE plate_z | ~0.95 ft |
+Evaluating model...
+1226/1226 - 10s - 8ms/step - loss: 0.8289
+Test NLL (scaled): 0.8289
+1226/1226 ━━━━━━━━━━━━━━━━━━━━ 8s 7ms/step    
+
+========== FULL METRICS ==========
+Test MSE: 0.6538
+Test MAE: 0.6353
+Test RMSE: 0.8086
+MAE plate_x: 0.610
+MAE plate_z: 0.661
+RMSE plate_x: 0.773
+RMSE plate_z: 0.843
+
+========== Example Predictions ==========
+pred: [0.02222472 2.767339  ]    true: [-0.29  2.92]
+pred: [-0.00809206  2.8652947 ]    true: [-1.03  1.59]
+pred: [0.1169788 2.8396766]    true: [0.14 3.21]
+pred: [0.09628084 2.629649  ]    true: [1.95 2.01]
+pred: [0.3191263 1.9097983]    true: [0.45 2.94]
 
 These are point-estimate metrics on the model mean only. The actual sampling spread (via GMM) is intentionally wider to reflect real pitch-to-pitch variation.

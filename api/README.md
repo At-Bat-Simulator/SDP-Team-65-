@@ -87,7 +87,6 @@ All fields in `user_context` are optional. If omitted, the model uses the most r
   "pitch_type_probs": { "FF": 0.28, "SL": 0.41, "CU": 0.12, ... },
   "location": { "plate_x": 0.62, "plate_z": 1.83 },
   "location_mean": { "plate_x": 0.54, "plate_z": 1.91 },
-  "location_std": { "plate_x": 0.21, "plate_z": 0.29 },
   "context": {
     "balls": 1, "strikes": 2, "outs_when_up": 1,
     "inning": 5, "score_diff": -1
@@ -104,7 +103,6 @@ All fields in `user_context` are optional. If omitted, the model uses the most r
 | `location.plate_x` | Horizontal position in feet (negative = catcher's left / arm side) |
 | `location.plate_z` | Vertical position in feet above the ground |
 | `location_mean` | LSTM model's raw predicted mean (before GMM sampling) |
-| `location_std` | Model's predicted uncertainty (std dev) in each dimension |
 | `context_label` | Indicates which fallback was used: `"pitcher_batter"`, `"pitcher_only"`, or `"league_avg"` |
 
 ---
@@ -135,7 +133,7 @@ Pitch type aliases are normalized at both masking and training time (`FO → FS`
 4. Apply repertoire mask → renormalize → stochastically sample pitch type
 5. Run the **location model** → get `[mu_x, mu_z, log_var_x, log_var_z]`
 6. Apply targeting bias heuristic (count-based nudges to correct mean regression)
-7. Sample final `(plate_x, plate_z)` from the **GMM** using `component_temperature=0.35`
+7. Sample final `(plate_x, plate_z)` from the **GMM** using `component_temperature=0.65`
 8. Return prediction + full probability breakdown to frontend
 
 ---
