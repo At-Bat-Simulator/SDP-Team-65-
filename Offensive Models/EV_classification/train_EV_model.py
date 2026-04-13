@@ -5,7 +5,7 @@ from sklearn.utils.class_weight import compute_class_weight
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import tensorflow as tf
 
-from EVLA_architecture import build_ev_model
+from EV_architecture import build_ev_model
 
 ART_PATH   = "artifacts/"
 SHARED_DIR = "../../artifacts/shared/"

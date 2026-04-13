@@ -51,7 +51,7 @@ function prettyPitchType(code) {
   return PITCH_TYPE_NAMES[c] ?? c;
 }
 
-const FAIR_OUTS = new Set(["popup", "flyout", "groundout"]);
+const FAIR_OUTS = new Set(["popup", "flyout", "groundout", "lineout"]);
 
 function prettyHitType(hitType) {
   switch (hitType) {
@@ -67,6 +67,8 @@ function prettyHitType(hitType) {
       return "Flyout";
     case "popup":
       return "Popup";
+    case "lineout":
+      return "Line Out";
     default:
       return "Ball in Play!";
   }
@@ -309,10 +311,10 @@ export default function SimulatorPage() {
           swingProb: api.swing_prob ?? null,
           contactOutcome: api.contact_outcome ?? null,
           pitchVelocity: api.pitch_velocity ?? null,
-          exitVelocity: api.exit_velocity ?? null,
+          evBucket: api.ev_bucket ?? null,
           launchAngle: api.launch_angle ?? null,
           hitType: api.hit_type ?? null,
-          sprayDiection: api.spray_direction ?? null,
+
           // We derive Ball/Strike from the predicted location + hitter zone.
           //
           result: null,
@@ -466,7 +468,9 @@ export default function SimulatorPage() {
         : result.includes("foul")
           ? "#f0a040"
           : result.includes("fair")
-            ? isFairOut ? "#ff6b6b" : "#4fc3f7"
+            ? isFairOut
+              ? "#ff6b6b"
+              : "#4fc3f7"
             : "rgba(255,255,255,0.95)";
 
     // History navigation: jump straight to final position + color, no animation
@@ -823,7 +827,9 @@ export default function SimulatorPage() {
             )}
 
             {atBatOver && (
-              <div className={`atbat-result-banner ${atBatOver === "fair" && FAIR_OUTS.has(currentPitch?.hitType) ? "fair-out" : atBatOver}`}>
+              <div
+                className={`atbat-result-banner ${atBatOver === "fair" && FAIR_OUTS.has(currentPitch?.hitType) ? "fair-out" : atBatOver}`}
+              >
                 {atBatOver === "strikeout_swinging" && "Strikeout Swinging!"}
                 {atBatOver === "strikeout_looking" && "Strikeout Looking!"}
                 {atBatOver === "walk" && "Walk!"}
@@ -906,17 +912,8 @@ export default function SimulatorPage() {
             {currentPitch?.exitVelocity != null &&
               currentPitch?.result === "Fair" && (
                 <div className="scoreboard-row">
-                  <div className="label">Exit Velo</div>
-                  <div className="value mono">
-                    {currentPitch.exitVelocity} mph
-                  </div>
-                </div>
-              )}
-            {currentPitch?.launchAngle != null &&
-              currentPitch?.result === "Fair" && (
-                <div className="scoreboard-row">
-                  <div className="label">Launch Angle</div>
-                  <div className="value mono">{currentPitch.launchAngle}°</div>
+                  <div className="label">Contact Type</div>
+                  <div className="value mono">{currentPitch.evBucket}</div>
                 </div>
               )}
           </div>
@@ -952,13 +949,9 @@ export default function SimulatorPage() {
                     <span className="ph-type">
                       {prettyPitchType(p.pitch_type)}
                     </span>
-                    {p.exit_velocity != null &&
-                      p.launch_angle != null &&
-                      p.result_cat !== "foul" && (
-                        <span className="ph-evla">
-                          {p.exit_velocity} mph · {p.launch_angle}°
-                        </span>
-                      )}
+                    {p.evBucket != null && p.result_cat !== "foul" && (
+                      <span className="ph-evla">{p.evBucket}</span>
+                    )}
                   </div>
                 ))}
               </div>

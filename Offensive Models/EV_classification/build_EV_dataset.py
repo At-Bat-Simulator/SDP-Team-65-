@@ -72,8 +72,9 @@ def preprocess(df, pitcher_le, batter_le):
     bat_speed_lookup = pickle.load(open(SHARED_DIR + "bat_speed_lookup.pkl", "rb"))
     bat_speed_pop_mean = pickle.load(open(SHARED_DIR + "bat_speed_pop_mean.pkl", "rb"))
 
+
     df["bat_speed_val"] = df["batter"].astype(int).map(
-        lambda x: 1.0 if x in bat_speed_lookup else 0.0
+        lambda x: bat_speed_lookup.get(x, bat_speed_pop_mean)
     )
 
     df["has_bat_speed"] = df["batter"].astype(int).map(
@@ -98,8 +99,8 @@ def build_location_features(plate_x: float, plate_z: float) -> np.ndarray:
 def build_context_features(df):
     stand_cols   = [c for c in df.columns if c.startswith("stand_")]
     pthrows_cols = [c for c in df.columns if c.startswith("p_throws_")]
-    cols = ["balls", "strikes", "outs_when_up", "inning", "score_diff",
-            "on_1b", "on_2b", "on_3b", "bat_speed_val", "has_bat_speed"] + stand_cols + pthrows_cols
+    cols = ["balls", "strikes", "outs_when_up", "inning", "score_diff", "bat_speed_val",
+            "on_1b", "on_2b", "on_3b", "has_bat_speed"] + stand_cols + pthrows_cols
     return df[cols].values.astype(float), cols
 
 

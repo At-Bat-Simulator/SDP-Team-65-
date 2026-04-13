@@ -4,7 +4,7 @@ from tensorflow.keras.models import load_model
 import json
 import os
 
-def load_all(PT_DIR, LOC_DIR, ST_DIR, CT_DIR, EVLA_DIR, SHARED_DIR, gmm_path=None):
+def load_all(PT_DIR, LOC_DIR, ST_DIR, CT_DIR, EV_DIR, SHARED_DIR, gmm_path=None):
     pitchtype_model = load_model(PT_DIR + "pitchtype_model.keras")
     location_model  = load_model(LOC_DIR + "pitch_location_model.keras", compile=False)
     swingtake_model = load_model(ST_DIR + "swingtake_model.keras")
@@ -13,12 +13,12 @@ def load_all(PT_DIR, LOC_DIR, ST_DIR, CT_DIR, EVLA_DIR, SHARED_DIR, gmm_path=Non
     contact_pitch_types = pickle.load(open(CT_DIR + "pitch_types.pkl", "rb"))
     contact_loc_scaler = pickle.load(open(CT_DIR + "loc_scaler.pkl", "rb"))
     contact_ctx_scaler = pickle.load(open(CT_DIR + "ctx_scaler.pkl", "rb"))
-    evla_model = load_model(EVLA_DIR + "ev_model.keras")
-    evla_loc_scaler    = pickle.load(open(EVLA_DIR + "loc_scaler.pkl",    "rb"))
-    evla_scaler_X      = pickle.load(open(EVLA_DIR + "scaler_X.pkl",      "rb"))
-    evla_target_scaler = pickle.load(open(EVLA_DIR + "target_scaler.pkl", "rb"))
-    evla_features      = pickle.load(open(EVLA_DIR + "features.pkl",      "rb"))
-    evla_pitch_types   = pickle.load(open(EVLA_DIR + "pitch_types.pkl",   "rb"))
+    ev_model         = load_model(EV_DIR + "ev_model.keras", compile=False)
+    ev_loc_scaler    = pickle.load(open(EV_DIR + "loc_scaler.pkl",    "rb"))
+    ev_ctx_scaler    = pickle.load(open(EV_DIR + "ctx_scaler.pkl",    "rb"))
+    ev_buckets = pickle.load(open(EV_DIR + "ev_buckets.pkl", "rb"))
+    ev_pitch_types   = pickle.load(open(EV_DIR + "pitch_types.pkl",   "rb"))
+    bat_speed_lookup = pickle.load(open(SHARED_DIR + "bat_speed_lookup.pkl", "rb"))
 
     
 
@@ -80,12 +80,12 @@ def load_all(PT_DIR, LOC_DIR, ST_DIR, CT_DIR, EVLA_DIR, SHARED_DIR, gmm_path=Non
         "contact_pitch_types": contact_pitch_types,
         "contact_loc_scaler":  contact_loc_scaler,
         "contact_ctx_scaler":  contact_ctx_scaler,
-        "evla_model":          evla_model,
-        "evla_loc_scaler":    evla_loc_scaler,
-        "evla_scaler_X":      evla_scaler_X,
-        "evla_target_scaler": evla_target_scaler,
-        "evla_features":      evla_features,
-        "evla_pitch_types":   evla_pitch_types,
+        "ev_model":         ev_model,
+        "ev_loc_scaler":    ev_loc_scaler,
+        "ev_ctx_scaler":    ev_ctx_scaler,
+        "ev_buckets": ev_buckets, 
+        "ev_pitch_types":   ev_pitch_types,
+        "bat_speed_lookup": bat_speed_lookup,
 
 
     }

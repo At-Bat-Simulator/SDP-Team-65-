@@ -264,6 +264,21 @@ def _apply_user_context(serving_window, user_context: dict):
 
     return w
 
+def sample_launch_angle(plate_z: float, rng: np.random.Generator) -> float:
+    """Physics-based LA sampling conditioned on pitch height."""
+    if plate_z < 1.5:
+        return round(float(np.clip(rng.normal(5.0, 18.0), -40, 30)), 1)
+    elif plate_z < 2.5:
+        return round(float(np.clip(rng.normal(14.0, 20.0), -30, 45)), 1)
+    elif plate_z <= 3.5:
+        return round(float(np.clip(rng.normal(22.0, 22.0), -20, 60)), 1)
+    else:
+        return round(float(np.clip(rng.normal(30.0, 22.0), 0, 80)), 1)
+    
+
+
+
+
 def ensure_columns(df_sub, required_cols):
     for col in required_cols:
         if col not in df_sub.columns:
@@ -517,135 +532,101 @@ def predict_next(
     launch_angle = None
     exit_velocity = None
     launch_angle = None
-    spray_direction = None
     hit_type = None
-    if contact_outcome == "fair":
-        EVLA_SEQ_LEN = 3
-
-        # Build sequence: last 3 rows of serving_window, extract EV/LA features
-        evla_window = serving_window.iloc[-EVLA_SEQ_LEN:]
-        evla_sub = ensure_columns(evla_window.copy(), artifacts["evla_features"])
-        nf = len(artifacts["evla_features"])
-        evla_seq_raw = evla_sub.values.astype(np.float32)
-        if len(evla_seq_raw) < EVLA_SEQ_LEN:
-            pad = np.zeros((EVLA_SEQ_LEN - len(evla_seq_raw), nf), dtype=np.float32)
-            evla_seq_raw = np.vstack([pad, evla_seq_raw])
-        evla_seq_scaled = artifacts["evla_scaler_X"].transform(evla_seq_raw)
-        evla_seq_in = evla_seq_scaled[np.newaxis, :, :]  # (1, 3, nf)
-
-        # Pitcher/batter IDs (scalar)
-        evla_p_id = np.array([p_idx], dtype=np.int32)
-        evla_b_id = np.array([b_idx], dtype=np.int32)
-
-        # 14-dim pitch type one-hot
-        evla_pt = np.zeros((1, len(artifacts["evla_pitch_types"])), dtype=np.float32)
-        if str(pt_pred) in artifacts["evla_pitch_types"]:
-            evla_pt[0, artifacts["evla_pitch_types"].index(str(pt_pred))] = 1.0
-
-        # Location (already computed above)
-        evla_loc_scaled = artifacts["evla_loc_scaler"].transform(loc_raw)
-
-        ev_pred_scaled = artifacts["evla_model"].predict(
-            [evla_seq_in, evla_p_id, evla_b_id, evla_pt, evla_loc_scaled], verbose=0
-        )
-        ev_la_real = artifacts["evla_target_scaler"].inverse_transform(ev_pred_scaled)
-        exit_velocity = round(float(ev_la_real[0, 0]), 1)
-        launch_angle  = round(float(ev_la_real[0, 1]), 1)
-
-        #Sample spray direction from batter tendency
-        spray_rng = np.random.default_rng(rng_seed)
-        pull_pct   = float(last_row["batter_pull_pct"])   if "batter_pull_pct"   in last_row.index else 1/3
-        center_pct = float(last_row["batter_center_pct"]) if "batter_center_pct" in last_row.index else 1/3
-        oppo_pct   = float(last_row["batter_oppo_pct"])   if "batter_oppo_pct"   in last_row.index else 1/3
-        total = pull_pct + center_pct + oppo_pct
-        if total > 0:
-            pull_pct /= total; center_pct /= total; oppo_pct /= total
-        spray_direction = str(spray_rng.choice(["pull", "center", "oppo"],
-                                                p=[pull_pct, center_pct, oppo_pct]))
-        
+    ev_bucket = None 
     
-    if exit_velocity is not None and launch_angle is not None:
-        ev, la = exit_velocity, launch_angle
+    if contact_outcome == "fair":
+        # --- EV classification ---
+        ev_pt = np.zeros((1, len(artifacts["ev_pitch_types"])), dtype=np.float32)
+        if str(pt_pred) in artifacts["ev_pitch_types"]:
+            ev_pt[0, artifacts["ev_pitch_types"].index(str(pt_pred))] = 1.0
 
-        if ev >= 98 and 8 <= la <= 45:
-            r = spray_rng.random()
-            if r < 0.65:
-                hit_type = "home_run"
-            elif r < 0.85:
-                hit_type = "double"
+        ev_loc_scaled = artifacts["ev_loc_scaler"].transform(loc_raw)
+
+        # 14-feature CTX matching training order
+        EV_COLS = ["balls", "strikes", "outs_when_up", "inning", "score_diff",
+                   "on_1b", "on_2b", "on_3b"]
+        ev_ctx_vals = [float(last_row[c]) if c in last_row.index else 0.0 for c in EV_COLS]
+        bs_flag = 1.0 if batter_mlbam in artifacts["bat_speed_lookup"] else 0.0
+        ev_ctx_vals += [bs_flag, bs_flag]  # bat_speed_val, has_bat_speed
+        for col in ["stand_L", "stand_R", "p_throws_L", "p_throws_R"]:
+            ev_ctx_vals.append(float(last_row[col]) if col in last_row.index else 0.0)
+        ev_ctx_raw = np.array([ev_ctx_vals], dtype=np.float32)
+        ev_ctx_raw[:, :6] = artifacts["ev_ctx_scaler"].transform(ev_ctx_raw[:, :6])
+
+        ev_p_id = np.array([p_idx], dtype=np.int32)
+        ev_b_id = np.array([b_idx], dtype=np.int32)
+
+        ev_probs  = artifacts["ev_model"].predict(
+            [ev_pt, ev_loc_scaled, ev_ctx_raw, ev_p_id, ev_b_id], verbose=0
+        )[0]
+        ev_bucket = artifacts["ev_buckets"][int(np.argmax(ev_probs))]
+
+        # --- Physics-based LA ---
+        la_rng       = np.random.default_rng((rng_seed or 0) + 1)
+        launch_angle = sample_launch_angle(samp_z, la_rng)
+
+        # --- Rule classifier ---
+        spray_rng = np.random.default_rng(rng_seed)
+        la_cat = ("groundball" if launch_angle < 10 else
+                  "line_drive" if launch_angle < 25 else
+                  "fly_ball"   if launch_angle < 50 else
+                  "popup")
+
+        if ev_bucket == "Barrel":
+            if la_cat in ("line_drive", "fly_ball"):
+                r = spray_rng.random()
+                if r < 0.65:   hit_type = "home_run"
+                elif r < 0.85: hit_type = "double"
+                else:          hit_type = "flyout"
+            elif la_cat == "groundball":
+                hit_type = "single" if spray_rng.random() < 0.28 else "groundout"
             else:
+                hit_type = "popup"
+
+        elif ev_bucket == "Hard":
+            if la_cat == "fly_ball":
+                r = spray_rng.random()
+                if r < 0.20:   hit_type = "home_run"
+                elif r < 0.55: hit_type = "double"
+                elif r < 0.65: hit_type = "single"
+                else:          hit_type = "flyout"
+            elif la_cat == "line_drive":
+                r = spray_rng.random()
+                if r < 0.05:   hit_type = "home_run"
+                elif r < 0.35: hit_type = "double"
+                elif r < 0.85: hit_type = "single"
+                else:          hit_type = "lineout"
+            elif la_cat == "groundball":
+                hit_type = "single" if spray_rng.random() < 0.20 else "groundout"
+            else:
+                hit_type = "popup"
+
+        elif ev_bucket == "Medium":
+            if la_cat == "fly_ball":
+                r = spray_rng.random()
+                if r < 0.03:   hit_type = "home_run"
+                elif r < 0.13: hit_type = "double"
+                else:          hit_type = "flyout"
+            elif la_cat == "line_drive":
+                r = spray_rng.random()
+                if r < 0.05:   hit_type = "double"
+                elif r < 0.55: hit_type = "single"
+                else:          hit_type = "lineout"
+            elif la_cat == "groundball":
+                hit_type = "single" if spray_rng.random() < 0.12 else "groundout"
+            else:
+                hit_type = "popup"
+
+        else:  # Soft
+            if la_cat == "fly_ball":
                 hit_type = "flyout"
-
-        elif ev >= 95 and 10 <= la <= 35:
-            r = spray_rng.random()
-            if r < 0.30:
-                hit_type = "home_run"
-            elif r < 0.65:
-                hit_type = "double"
-            elif r < 0.80:
-                hit_type = "single"
+            elif la_cat == "line_drive":
+                hit_type = "single" if spray_rng.random() < 0.15 else "lineout"
+            elif la_cat == "groundball":
+                hit_type = "single" if spray_rng.random() < 0.05 else "groundout"
             else:
-                hit_type = "flyout"
-
-        elif la > 50:
-            hit_type = "popup"
-
-        elif la >= 35:
-            if ev >= 90:
-                r = spray_rng.random()
-                if r < 0.30:
-                    hit_type = "home_run"
-                elif r < 0.85:
-                    hit_type = "flyout"
-                else:
-                    hit_type = "double"
-            else:
-                hit_type = "flyout" if spray_rng.random() < 0.95 else "home_run"
-
-        elif la >= 25:
-            if ev >= 93:
-                r = spray_rng.random()
-                if r < 0.30:
-                    hit_type = "flyout"
-                elif r < 0.60:
-                    hit_type = "double"
-                else:
-                    hit_type = "home_run"
-            elif ev >= 85:
-                hit_type = "double" if spray_rng.random() < 0.18 else "flyout"
-            else:
-                hit_type = "flyout"
-
-        elif la >= 10:
-            if ev >= 90:
-                r = spray_rng.random()
-                if r < 0.15:
-                    hit_type = "flyout"
-                elif r < 0.50 and spray_direction in ("pull", "oppo"):
-                    hit_type = "double"
-                else:
-                    hit_type = "single"
-            elif ev >= 80:
-                r = spray_rng.random()
-                if r < 0.30:
-                    hit_type = "flyout"
-                else:
-                    hit_type = "single"
-            else:
-                hit_type = "single" if spray_rng.random() < 0.55 else "flyout"
-
-        elif la >= 0:
-            hit_prob = 0.20 if ev >= 90 else 0.10
-            hit_type = "single" if spray_rng.random() < hit_prob else "groundout"
-
-        else:
-            if ev >= 95:
-                hit_prob = 0.22
-            elif ev >= 80:
-                hit_prob = 0.17
-            else:
-                hit_prob = 0.05
-            hit_type = "single" if spray_rng.random() < hit_prob else "groundout"
+                hit_type = "popup"
 
 
 
@@ -664,7 +645,8 @@ def predict_next(
         "contact_probs": contact_probs,
         "exit_velocity": exit_velocity,
         "launch_angle": launch_angle,
-        "spray_direction": spray_direction,
         "hit_type": hit_type,
+        "exit_velocity": exit_velocity,
+        "ev_bucket": ev_bucket
 
     }
