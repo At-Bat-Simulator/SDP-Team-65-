@@ -534,6 +534,9 @@ def predict_next(
     launch_angle = None
     hit_type = None
     ev_bucket = None 
+
+    
+
     
     if contact_outcome == "fair":
         # --- EV classification ---
@@ -572,61 +575,85 @@ def predict_next(
                   "line_drive" if launch_angle < 25 else
                   "fly_ball"   if launch_angle < 50 else
                   "popup")
+        
+        
 
+    
         if ev_bucket == "Barrel":
-            if la_cat in ("line_drive", "fly_ball"):
+            if la_cat == "fly_ball":
                 r = spray_rng.random()
-                if r < 0.65:   hit_type = "home_run"
-                elif r < 0.85: hit_type = "double"
+                if r < 0.58:   hit_type = "home_run"
+                elif r < 0.65: hit_type = "double"
                 else:          hit_type = "flyout"
+            elif la_cat == "line_drive":
+                r = spray_rng.random()
+                if r < 0.12:   hit_type = "home_run"
+                elif r < 0.46: hit_type = "double"
+                elif r < 0.73: hit_type = "single"
+                else:          hit_type = "lineout"
             elif la_cat == "groundball":
-                hit_type = "single" if spray_rng.random() < 0.28 else "groundout"
+                r = spray_rng.random()
+                if r < 0.05:   hit_type = "double"
+                elif r < 0.47: hit_type = "single"
+                else:          hit_type = "groundout"
             else:
                 hit_type = "popup"
 
         elif ev_bucket == "Hard":
             if la_cat == "fly_ball":
                 r = spray_rng.random()
-                if r < 0.20:   hit_type = "home_run"
-                elif r < 0.55: hit_type = "double"
-                elif r < 0.65: hit_type = "single"
+                if r < 0.06:   hit_type = "home_run"
+                elif r < 0.11: hit_type = "double"
                 else:          hit_type = "flyout"
             elif la_cat == "line_drive":
                 r = spray_rng.random()
-                if r < 0.05:   hit_type = "home_run"
-                elif r < 0.35: hit_type = "double"
-                elif r < 0.85: hit_type = "single"
+                if r < 0.16:   hit_type = "double"
+                elif r < 0.58: hit_type = "single"
                 else:          hit_type = "lineout"
             elif la_cat == "groundball":
-                hit_type = "single" if spray_rng.random() < 0.20 else "groundout"
+                r = spray_rng.random()
+                if r < 0.03:   hit_type = "double"
+                elif r < 0.29: hit_type = "single"
+                else:          hit_type = "groundout"
             else:
                 hit_type = "popup"
 
         elif ev_bucket == "Medium":
             if la_cat == "fly_ball":
                 r = spray_rng.random()
-                if r < 0.03:   hit_type = "home_run"
-                elif r < 0.13: hit_type = "double"
+                if r < 0.04:   hit_type = "double"
+                elif r < 0.18: hit_type = "single"
                 else:          hit_type = "flyout"
             elif la_cat == "line_drive":
                 r = spray_rng.random()
-                if r < 0.05:   hit_type = "double"
-                elif r < 0.55: hit_type = "single"
+                if r < 0.07:   hit_type = "double"
+                elif r < 0.72: hit_type = "single"
                 else:          hit_type = "lineout"
             elif la_cat == "groundball":
-                hit_type = "single" if spray_rng.random() < 0.12 else "groundout"
+                r = spray_rng.random()
+                if r < 0.01:   hit_type = "double"
+                elif r < 0.15: hit_type = "single"
+                else:          hit_type = "groundout"
             else:
                 hit_type = "popup"
 
         else:  # Soft
             if la_cat == "fly_ball":
-                hit_type = "flyout"
+                r = spray_rng.random()
+                if r < 0.04:   hit_type = "double"
+                elif r < 0.47: hit_type = "single"
+                else:          hit_type = "flyout"
             elif la_cat == "line_drive":
-                hit_type = "single" if spray_rng.random() < 0.15 else "lineout"
+                r = spray_rng.random()
+                if r < 0.03:   hit_type = "double"
+                elif r < 0.38: hit_type = "single"
+                else:          hit_type = "lineout"
             elif la_cat == "groundball":
-                hit_type = "single" if spray_rng.random() < 0.05 else "groundout"
+                hit_type = "single" if spray_rng.random() < 0.17 else "groundout"
             else:
                 hit_type = "popup"
+
+
 
 
 

@@ -212,7 +212,7 @@ def simulate_atbat(pitcher: dict, batter: dict) -> dict:
 
 
 def main():
-    N_ATBATS = 500
+    N_ATBATS = 200
     print(f"Fetching player list from {API_BASE}...")
     pitchers, batters = get_players()
     print(f"  {len(pitchers)} pitchers, {len(batters)} batters available")
@@ -370,10 +370,10 @@ def main():
 
     print("\n--- HIT TYPE BREAKDOWN (of BIP) ---")
     HITS = {"single", "double", "home_run"}
-    OUTS = {"popup", "flyout", "groundout"}
+    OUTS = {"popup", "flyout", "groundout", "lineout"}
     total_bip = sum(hit_type_counts.values())
     if total_bip:
-        for ht in ["single", "double", "home_run", "popup", "flyout", "groundout", "unknown"]:
+        for ht in ["single", "double", "home_run", "popup", "flyout", "groundout", "lineout", "unknown"]:
             cnt = hit_type_counts.get(ht, 0)
             if cnt:
                 pct_bip = cnt / total_bip * 100
