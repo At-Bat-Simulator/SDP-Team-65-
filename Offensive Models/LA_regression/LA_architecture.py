@@ -1,18 +1,13 @@
-from tensorflow.keras.layers import (
-    Input, Embedding, Dense, Dropout,
-    Concatenate, Flatten
-)
+from tensorflow.keras.layers import Input, Embedding, Dense, Dropout, Concatenate, Flatten
 from tensorflow.keras.models import Model
 
 
-def build_ev_model(
+def build_la_model(
     num_features: int,
     num_pitchers: int,
     num_batters: int,
     pitch_type_dim: int,
     loc_dim: int,
-    num_ev_buckets: int = 4,
-    num_la_buckets: int = 4,
 ):
     pitcher_input   = Input(shape=(1,), name="pitcher_input", dtype="int32")
     batter_input    = Input(shape=(1,), name="batter_input",  dtype="int32")
@@ -31,13 +26,10 @@ def build_ev_model(
     x = Dense(32, activation="relu")(x)
     x = Dropout(0.10)(x)
 
-    ev = Dense(16, activation="relu")(x)
-    ev_out = Dense(num_ev_buckets, activation="softmax", name="ev_out")(ev)
-
-    la = Dense(16, activation="relu")(x)
-    la_out = Dense(num_la_buckets, activation="softmax", name="la_out")(la)
+    # Linear activation — LA can be negative (groundballs below 0 degrees)
+    out = Dense(1, activation="linear", name="la_out")(x)
 
     return Model(
         inputs=[pitchtype_input, loc_input, context_input, pitcher_input, batter_input],
-        outputs=[ev_out, la_out]
+        outputs=out
     )
