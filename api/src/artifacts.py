@@ -18,7 +18,10 @@ def load_all(PT_DIR, LOC_DIR, ST_DIR, CT_DIR, EV_DIR, SHARED_DIR, gmm_path=None)
     ev_ctx_scaler    = pickle.load(open(EV_DIR + "ctx_scaler.pkl",    "rb"))
     ev_buckets = pickle.load(open(EV_DIR + "ev_buckets.pkl", "rb"))
     ev_pitch_types   = pickle.load(open(EV_DIR + "pitch_types.pkl",   "rb"))
-    bat_speed_lookup = pickle.load(open(SHARED_DIR + "bat_speed_lookup.pkl", "rb"))
+    bat_speed_lookup    = pickle.load(open(SHARED_DIR + "bat_speed_lookup.pkl",    "rb"))
+    bat_speed_pop_mean  = pickle.load(open(SHARED_DIR + "bat_speed_pop_mean.pkl",  "rb"))
+    swing_length_lookup   = pickle.load(open(SHARED_DIR + "swing_length_lookup.pkl",   "rb"))
+    swing_length_pop_mean = pickle.load(open(SHARED_DIR + "swing_length_pop_mean.pkl", "rb"))
 
     
 
@@ -85,7 +88,10 @@ def load_all(PT_DIR, LOC_DIR, ST_DIR, CT_DIR, EV_DIR, SHARED_DIR, gmm_path=None)
         "ev_ctx_scaler":    ev_ctx_scaler,
         "ev_buckets": ev_buckets, 
         "ev_pitch_types":   ev_pitch_types,
-        "bat_speed_lookup": bat_speed_lookup,
+        "bat_speed_lookup":     bat_speed_lookup,
+        "bat_speed_pop_mean":   bat_speed_pop_mean,
+        "swing_length_lookup":    swing_length_lookup,
+        "swing_length_pop_mean":  swing_length_pop_mean,
 
 
     }

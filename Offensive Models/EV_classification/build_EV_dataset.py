@@ -81,6 +81,16 @@ def preprocess(df, pitcher_le, batter_le):
     lambda x: 1.0 if x in bat_speed_lookup else 0.0
     )
 
+    swing_length_lookup   = pickle.load(open(SHARED_DIR + "swing_length_lookup.pkl",   "rb"))
+    swing_length_pop_mean = pickle.load(open(SHARED_DIR + "swing_length_pop_mean.pkl", "rb"))
+
+    df["swing_length_val"] = df["batter"].astype(int).map(
+        lambda x: swing_length_lookup.get(x, swing_length_pop_mean)
+    )
+    df["has_swing_length"] = df["batter"].astype(int).map(
+        lambda x: 1.0 if x in swing_length_lookup else 0.0
+)
+
     return df
 
 def build_pitch_type_onehot(pitch_type: str) -> np.ndarray:
@@ -99,8 +109,8 @@ def build_location_features(plate_x: float, plate_z: float) -> np.ndarray:
 def build_context_features(df):
     stand_cols   = [c for c in df.columns if c.startswith("stand_")]
     pthrows_cols = [c for c in df.columns if c.startswith("p_throws_")]
-    cols = ["balls", "strikes", "outs_when_up", "inning", "score_diff", "bat_speed_val",
-            "on_1b", "on_2b", "on_3b", "has_bat_speed"] + stand_cols + pthrows_cols
+    cols = ["balls", "strikes", "outs_when_up", "inning", "score_diff", "bat_speed_val", "swing_length_val",
+            "on_1b", "on_2b", "on_3b", "has_bat_speed", "has_swing_length"] + stand_cols + pthrows_cols
     return df[cols].values.astype(float), cols
 
 
@@ -164,8 +174,8 @@ if __name__ == "__main__":
     ctx_scaler = StandardScaler()
     CTX_train_s = CTX_train.copy()
     CTX_test_s  = CTX_test.copy()
-    CTX_train_s[:, :6] = ctx_scaler.fit_transform(CTX_train[:, :6])
-    CTX_test_s[:,  :6] = ctx_scaler.transform(CTX_test[:, :6])
+    CTX_train_s[:, :7] = ctx_scaler.fit_transform(CTX_train[:, :7])
+    CTX_test_s[:,  :7] = ctx_scaler.transform(CTX_test[:, :7])
 
     loc_scaler = StandardScaler()
     LOC_train_s = loc_scaler.fit_transform(LOC_train)

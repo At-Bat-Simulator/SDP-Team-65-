@@ -546,16 +546,32 @@ def predict_next(
 
         ev_loc_scaled = artifacts["ev_loc_scaler"].transform(loc_raw)
 
-        # 14-feature CTX matching training order
-        EV_COLS = ["balls", "strikes", "outs_when_up", "inning", "score_diff",
-                   "on_1b", "on_2b", "on_3b"]
-        ev_ctx_vals = [float(last_row[c]) if c in last_row.index else 0.0 for c in EV_COLS]
-        bs_flag = 1.0 if batter_mlbam in artifacts["bat_speed_lookup"] else 0.0
-        ev_ctx_vals += [bs_flag, bs_flag]  # bat_speed_val, has_bat_speed
+        # 16-feature CTX matching training order:
+        # balls, strikes, outs_when_up, inning, score_diff, bat_speed_val, swing_length_val,
+        # on_1b, on_2b, on_3b, has_bat_speed, has_swing_length, stand_L, stand_R, p_throws_L, p_throws_R
+        bs_val  = artifacts["bat_speed_lookup"].get(batter_mlbam,    artifacts["bat_speed_pop_mean"])
+        sl_val  = artifacts["swing_length_lookup"].get(batter_mlbam, artifacts["swing_length_pop_mean"])
+        bs_flag = 1.0 if batter_mlbam in artifacts["bat_speed_lookup"]    else 0.0
+        sl_flag = 1.0 if batter_mlbam in artifacts["swing_length_lookup"] else 0.0
+
+        ev_ctx_vals = [
+            float(last_row["balls"])        if "balls"        in last_row.index else 0.0,
+            float(last_row["strikes"])      if "strikes"      in last_row.index else 0.0,
+            float(last_row["outs_when_up"]) if "outs_when_up" in last_row.index else 0.0,
+            float(last_row["inning"])       if "inning"       in last_row.index else 0.0,
+            float(last_row["score_diff"])   if "score_diff"   in last_row.index else 0.0,
+            bs_val,   # bat_speed_val
+            sl_val,   # swing_length_val
+            float(last_row["on_1b"])        if "on_1b"        in last_row.index else 0.0,
+            float(last_row["on_2b"])        if "on_2b"        in last_row.index else 0.0,
+            float(last_row["on_3b"])        if "on_3b"        in last_row.index else 0.0,
+            bs_flag,  # has_bat_speed
+            sl_flag,  # has_swing_length
+        ]
         for col in ["stand_L", "stand_R", "p_throws_L", "p_throws_R"]:
             ev_ctx_vals.append(float(last_row[col]) if col in last_row.index else 0.0)
         ev_ctx_raw = np.array([ev_ctx_vals], dtype=np.float32)
-        ev_ctx_raw[:, :6] = artifacts["ev_ctx_scaler"].transform(ev_ctx_raw[:, :6])
+        ev_ctx_raw[:, :7] = artifacts["ev_ctx_scaler"].transform(ev_ctx_raw[:, :7])
 
         ev_p_id = np.array([p_idx], dtype=np.int32)
         ev_b_id = np.array([b_idx], dtype=np.int32)
@@ -576,7 +592,7 @@ def predict_next(
                   "fly_ball"   if launch_angle < 50 else
                   "popup")
         
-        
+
 
     
         if ev_bucket == "Barrel":

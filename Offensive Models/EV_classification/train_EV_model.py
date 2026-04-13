@@ -22,7 +22,7 @@ def evaluate(evb_true, ev_pred_probs, ev_bucket_names):
     print(confusion_matrix(evb_true, ev_pred))
 
 
-def focal_loss(gamma=2.0, alpha=None):
+def focal_loss(gamma=3.0, alpha=None):
     def loss_fn(y_true, y_pred):
         y_true = tf.cast(y_true, tf.int32)
         y_true_onehot = tf.one_hot(y_true, depth=y_pred.shape[-1])
@@ -88,7 +88,7 @@ if __name__ == "__main__":
 
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001, clipnorm=1.0),
-        loss=focal_loss(gamma=2.0),
+        loss=focal_loss(gamma=3.0),
         metrics=["accuracy"],
     )
     model.summary()
