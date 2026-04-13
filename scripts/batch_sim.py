@@ -212,7 +212,7 @@ def simulate_atbat(pitcher: dict, batter: dict) -> dict:
 
 
 def main():
-    N_ATBATS = 200
+    N_ATBATS = 500
     print(f"Fetching player list from {API_BASE}...")
     pitchers, batters = get_players()
     print(f"  {len(pitchers)} pitchers, {len(batters)} batters available")

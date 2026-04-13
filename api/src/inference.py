@@ -582,7 +582,7 @@ def predict_next(
         ev_bucket = artifacts["ev_buckets"][int(np.argmax(ev_probs))]
 
         # --- Physics-based LA ---
-        la_rng       = np.random.default_rng((rng_seed or 0) + 1)
+        la_rng       = np.random.default_rng()
         launch_angle = sample_launch_angle(samp_z, la_rng)
 
         # --- Rule classifier ---
