@@ -4,7 +4,7 @@ import pickle
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 
-SEQ_LEN = 3
+
 TEST_SIZE = 0.15
 RANDOM_SEED = 42
 
@@ -57,12 +57,9 @@ def load_statcast():
 
 
 def preprocess(df, pitcher_le, batter_le):
-    seq_features = [
+    needed =  [
         "balls", "strikes", "outs_when_up", "inning",
         "bat_score", "fld_score",
-    ]
-
-    needed = seq_features + [
         "description", "pitch_type",
         "plate_x", "plate_z",
         "stand", "p_throws",
@@ -76,25 +73,14 @@ def preprocess(df, pitcher_le, batter_le):
 
     for base in ["on_1b", "on_2b", "on_3b"]:
         df[base] = df[base].notna().astype(int)
-
-    df["score_diff"] = df["bat_score"] - df["fld_score"]
-    seq_features.append("score_diff")
+    
 
     df = pd.get_dummies(df, columns=["stand", "p_throws"], drop_first=False)
-    seq_features += [c for c in df.columns if c.startswith("stand_") or c.startswith("p_throws_")]
-
-    df = df.sort_values(by=["pitcher", "game_date", "game_pk", "at_bat_number", "pitch_number"])
-    grp = df.groupby(["pitcher", "game_pk", "at_bat_number"], sort=False)
-    df["prev_plate_x"] = grp["plate_x"].shift(1).fillna(0.0)
-    df["prev_plate_z"] = grp["plate_z"].shift(1).fillna(0.0)
-    seq_features += ["prev_plate_x", "prev_plate_z"]
-
     df["pitcher_id"] = pitcher_le.transform(df["pitcher"].astype(int))
     df["batter_id"]  = batter_le.transform(df["batter"].astype(int))
+    df["score_diff"] = df["bat_score"] - df["fld_score"]
 
-    X = df[seq_features].astype(float).values
-    return df, X, seq_features
-
+    return df
 
 def build_pitch_type_onehot(pitch_type: str) -> np.ndarray:
     vec = np.zeros(len(ALL_PITCH_TYPES), dtype=np.float32)
@@ -109,6 +95,14 @@ def build_location_features(plate_x: float, plate_z: float) -> np.ndarray:
     return np.array([plate_x, plate_z, dist, is_strike], dtype=np.float32)
 
 
+def build_context_features(df):
+    stand_cols   = [c for c in df.columns if c.startswith("stand_")]
+    pthrows_cols = [c for c in df.columns if c.startswith("p_throws_")]
+    cols = ["balls", "strikes", "outs_when_up", "inning", "score_diff",
+            "on_1b", "on_2b", "on_3b"] + stand_cols + pthrows_cols
+    return df[cols].values.astype(float), cols
+
+
 def print_bucket_distribution(labels, bucket_names, title):
     print(f"  {title}:")
     for i, name in enumerate(bucket_names):
@@ -116,50 +110,19 @@ def print_bucket_distribution(labels, bucket_names, title):
         print(f"    {i} {name:15s}: {count:6,}  ({100*count/len(labels):.1f}%)")
 
 
-def build_sequences(df, X):
-    seq_X, seq_p, seq_b, seq_pt, seq_loc = [], [], [], [], []
-    seq_ev_bucket = []
-    seq_la_bucket = []
+def build_dataset(df):
+    df = df[df["description"].isin(BALLS_IN_PLAY)].copy()
+    df = df.dropna(subset=["launch_speed", "launch_angle"])
 
-    grouped = df.groupby(["pitcher", "game_pk", "at_bat_number"]).indices
-    print(f"Total at-bats: {len(grouped):,}")
-    print(f"Total pitches (post-filter): {len(df):,}")
+    PT  = np.array([build_pitch_type_onehot(pt) for pt in df["pitch_type"]], dtype=np.float32)
+    LOC = np.array([build_location_features(x, z) for x, z in zip(df["plate_x"], df["plate_z"])], dtype=np.float32)
+    CTX, ctx_cols = build_context_features(df)
+    P   = df["pitcher_id"].values.astype(np.int32)
+    B   = df["batter_id"].values.astype(np.int32)
+    ev_bucket = np.array([ev_to_bucket(v) for v in df["launch_speed"]], dtype=np.int32)
+    la_bucket = np.array([la_to_bucket(v) for v in df["launch_angle"]], dtype=np.int32)
 
-    for _, idxs in grouped.items():
-        idxs = list(idxs)
-
-        for i, tgt_pos in enumerate(idxs):
-            tgt_row = df.iloc[tgt_pos]
-
-            if tgt_row["description"] not in BALLS_IN_PLAY:
-                continue
-            if pd.isna(tgt_row["launch_speed"]) or pd.isna(tgt_row["launch_angle"]):
-                continue
-
-            prior = idxs[max(0, i - SEQ_LEN):i]
-            window = np.zeros((SEQ_LEN, X.shape[1]), dtype=np.float32)
-            if len(prior) > 0:
-                window[SEQ_LEN - len(prior):] = X[prior]
-
-            seq_X.append(window)
-            seq_p.append(int(tgt_row["pitcher_id"]))
-            seq_b.append(int(tgt_row["batter_id"]))
-            seq_pt.append(build_pitch_type_onehot(str(tgt_row["pitch_type"])))
-            seq_loc.append(build_location_features(
-                float(tgt_row["plate_x"]), float(tgt_row["plate_z"])
-            ))
-            seq_ev_bucket.append(ev_to_bucket(float(tgt_row["launch_speed"])))
-            seq_la_bucket.append(la_to_bucket(float(tgt_row["launch_angle"])))
-
-    X_seq     = np.array(seq_X,         dtype=np.float32)
-    P_seq     = np.array(seq_p,         dtype=np.int32)
-    B_seq     = np.array(seq_b,         dtype=np.int32)
-    PT_seq    = np.array(seq_pt,        dtype=np.float32)
-    LOC       = np.array(seq_loc,       dtype=np.float32)
-    ev_bucket = np.array(seq_ev_bucket, dtype=np.int32)
-    la_bucket = np.array(seq_la_bucket, dtype=np.int32)
-
-    return X_seq, P_seq, B_seq, PT_seq, LOC, ev_bucket, la_bucket
+    return PT, LOC, CTX, P, B, ev_bucket, la_bucket, ctx_cols
 
 
 if __name__ == "__main__":
@@ -170,44 +133,49 @@ if __name__ == "__main__":
     df = load_statcast()
 
     print("Preprocessing...")
-    df, X, seq_features = preprocess(df, pitcher_le, batter_le)
+    df = preprocess(df, pitcher_le, batter_le)
 
-    print("Building sequences...")
-    X_seq, P_seq, B_seq, PT_seq, LOC, ev_bucket, la_bucket = build_sequences(df, X)
+    print("Building dataset...")
+    PT, LOC, CTX, P, B, ev_bucket, la_bucket, ctx_cols = build_dataset(df)
 
     print(f"\nDataset size: {len(ev_bucket):,} balls in play")
     print_bucket_distribution(ev_bucket, EV_BUCKET_NAMES, "EV bucket distribution")
     print_bucket_distribution(la_bucket, LA_BUCKET_NAMES, "LA bucket distribution")
-    print(f"\nShapes — X_seq: {X_seq.shape}  PT: {PT_seq.shape}  "
-          f"LOC: {LOC.shape}  ev_bucket: {ev_bucket.shape}  la_bucket: {la_bucket.shape}")
+    print(f"\nShapes — PT: {PT.shape}  LOC: {LOC.shape}  CTX: {CTX.shape}  ev_bucket: {ev_bucket.shape}  la_bucket: {la_bucket.shape}")
+
 
     print("\nTrain/test split...")
-    (X_train,   X_test,
-     P_train,   P_test,
-     B_train,   B_test,
-     PT_train,  PT_test,
-     LOC_train, LOC_test,
-     evb_train, evb_test,
-     lab_train, lab_test) = train_test_split(
-        X_seq, P_seq, B_seq, PT_seq, LOC, ev_bucket, la_bucket,
+    (PT_train,  PT_test,
+    LOC_train, LOC_test,
+    CTX_train, CTX_test,
+    P_train,   P_test,
+    B_train,   B_test,
+    evb_train, evb_test,
+    lab_train, lab_test) = train_test_split(
+        PT, LOC, CTX, P, B, ev_bucket, la_bucket,
         test_size=TEST_SIZE,
         random_state=RANDOM_SEED,
         shuffle=True
     )
 
     # Scale sequence and location features 
-    ns_train, seq_len, nf = X_train.shape
-    scaler_X = StandardScaler()
-    X_train_s = scaler_X.fit_transform(X_train.reshape(-1, nf)).reshape(ns_train, seq_len, nf)
-    X_test_s  = scaler_X.transform(X_test.reshape(-1, nf)).reshape(X_test.shape[0], seq_len, nf)
+    
+    # Scale location and context features
+    ctx_scaler = StandardScaler()
+    CTX_train_s = CTX_train.copy()
+    CTX_test_s  = CTX_test.copy()
+    CTX_train_s[:, :5] = ctx_scaler.fit_transform(CTX_train[:, :5])
+    CTX_test_s[:,  :5] = ctx_scaler.transform(CTX_test[:, :5])
 
     loc_scaler = StandardScaler()
     LOC_train_s = loc_scaler.fit_transform(LOC_train)
     LOC_test_s  = loc_scaler.transform(LOC_test)
 
+    
+
     print("Saving artifacts...")
-    np.save(ARTIFACTS + "X_train.npy",   X_train_s)
-    np.save(ARTIFACTS + "X_test.npy",    X_test_s)
+    np.save(ARTIFACTS + "CTX_train.npy", CTX_train_s)
+    np.save(ARTIFACTS + "CTX_test.npy",  CTX_test_s)
     np.save(ARTIFACTS + "P_train.npy",   P_train)
     np.save(ARTIFACTS + "P_test.npy",    P_test)
     np.save(ARTIFACTS + "B_train.npy",   B_train)
@@ -221,14 +189,14 @@ if __name__ == "__main__":
     np.save(ARTIFACTS + "lab_train.npy", lab_train)
     np.save(ARTIFACTS + "lab_test.npy",  lab_test)
 
-    pickle.dump(seq_features,    open(ARTIFACTS + "features.pkl",    "wb"))
-    pickle.dump(scaler_X,        open(ARTIFACTS + "scaler_X.pkl",    "wb"))
-    pickle.dump(loc_scaler,      open(ARTIFACTS + "loc_scaler.pkl",  "wb"))
-    pickle.dump(EV_BUCKET_NAMES, open(ARTIFACTS + "ev_buckets.pkl",  "wb"))
-    pickle.dump(LA_BUCKET_NAMES, open(ARTIFACTS + "la_buckets.pkl",  "wb"))
-    pickle.dump(ALL_PITCH_TYPES, open(ARTIFACTS + "pitch_types.pkl", "wb"))
+    pickle.dump(ctx_scaler,       open(ARTIFACTS + "ctx_scaler.pkl",  "wb"))
+    pickle.dump(loc_scaler,       open(ARTIFACTS + "loc_scaler.pkl",  "wb"))
+    pickle.dump(ctx_cols,         open(ARTIFACTS + "ctx_features.pkl","wb"))
+    pickle.dump(EV_BUCKET_NAMES,  open(ARTIFACTS + "ev_buckets.pkl",  "wb"))
+    pickle.dump(LA_BUCKET_NAMES,  open(ARTIFACTS + "la_buckets.pkl",  "wb"))
+    pickle.dump(ALL_PITCH_TYPES,  open(ARTIFACTS + "pitch_types.pkl", "wb"))
 
     print("\n✓ EV/LA classification dataset built.")
-    print(f"X_train: {X_train_s.shape}  evb_train: {evb_train.shape}  lab_train: {lab_train.shape}")
-    print("P_seq min/max:", P_seq.min(), P_seq.max())
-    print("B_seq min/max:", B_seq.min(), B_seq.max())
+    print(f"PT_train: {PT_train.shape}  CTX_train: {CTX_train_s.shape}  evb_train: {evb_train.shape}  lab_train: {lab_train.shape}")
+    print("P min/max:", P.min(), P.max())
+    print("B min/max:", B.min(), B.max())

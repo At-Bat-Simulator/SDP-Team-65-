@@ -32,8 +32,8 @@ def evaluate(evb_true, ev_pred_probs, lab_true, la_pred_probs, ev_bucket_names, 
 
 if __name__ == "__main__":
     print("Loading EV/LA dataset artifacts...")
-    X_train   = np.load(ART_PATH + "X_train.npy")
-    X_test    = np.load(ART_PATH + "X_test.npy")
+    CTX_train = np.load(ART_PATH + "CTX_train.npy")
+    CTX_test  = np.load(ART_PATH + "CTX_test.npy")
     P_train   = np.load(ART_PATH + "P_train.npy")
     P_test    = np.load(ART_PATH + "P_test.npy")
     B_train   = np.load(ART_PATH + "B_train.npy")
@@ -52,8 +52,7 @@ if __name__ == "__main__":
     pitcher_le      = pickle.load(open(SHARED_DIR + "pitcher_le.pkl", "rb"))
     batter_le       = pickle.load(open(SHARED_DIR + "batter_le.pkl",  "rb"))
 
-    seq_len        = X_train.shape[1]
-    num_features   = X_train.shape[2]
+    num_features   = CTX_train.shape[1]
     pitch_type_dim = PT_train.shape[1]
     loc_dim        = LOC_train.shape[1]
     num_pitchers   = len(pitcher_le.classes_)
@@ -61,7 +60,7 @@ if __name__ == "__main__":
     num_ev_buckets = len(ev_bucket_names)
     num_la_buckets = len(la_bucket_names)
 
-    print(f"seq_len={seq_len}  num_features={num_features}  pitch_type_dim={pitch_type_dim}")
+    
     print(f"loc_dim={loc_dim}  num_pitchers={num_pitchers}  num_batters={num_batters}")
     print(f"num_ev_buckets={num_ev_buckets}  num_la_buckets={num_la_buckets}")
 
@@ -74,7 +73,6 @@ if __name__ == "__main__":
     print("LA class weights:", {la_bucket_names[k]: f"{v:.2f}" for k, v in la_class_weight.items()})
 
     model = build_ev_model(
-        seq_len=seq_len,
         num_features=num_features,
         num_pitchers=num_pitchers,
         num_batters=num_batters,
@@ -108,7 +106,7 @@ if __name__ == "__main__":
     combined_weights = (ev_sample_weights + la_sample_weights) / 2.0
 
     history = model.fit(
-    [X_train, P_train, B_train, PT_train, LOC_train],
+    [PT_train, LOC_train, CTX_train, P_train, B_train],
     [evb_train, lab_train],  # list instead of dict
     sample_weight=combined_weights,
     validation_split=0.2,
@@ -120,7 +118,7 @@ if __name__ == "__main__":
 
     print("\nEvaluating on test set...")
     ev_pred_probs, la_pred_probs = model.predict(
-    [X_test, P_test, B_test, PT_test, LOC_test],
+    [PT_test, LOC_test, CTX_test, P_test, B_test],
     batch_size=256, verbose=0
     )
     evaluate(evb_test, ev_pred_probs, lab_test, la_pred_probs, ev_bucket_names, la_bucket_names)
