@@ -14,8 +14,8 @@ const ModelDocs = () => {
         width: '100%', 
         borderCollapse: 'collapse', 
         marginBottom: '30px',
-        backgroundColor: '#2a2a2a', /* Dark background */
-        color: '#ffffff',           /* Force text to be white */
+        backgroundColor: '#2a2a2a',
+        color: '#ffffff',          
         boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
       }}>
         <thead>
@@ -31,37 +31,37 @@ const ModelDocs = () => {
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>Swing %</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~47%</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>TBD</td>
-            <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>TBD</td>
+            <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>59.3%</td>
           </tr>
           <tr>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>Walk %</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~9%</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>TBD</td>
-            <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>TBD</td>
+            <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~1.5%</td>
           </tr>
           <tr>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>Strikeout % (K%)</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~23%</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>TBD</td>
-            <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>TBD</td>
+            <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~22.9%</td>
           </tr>
           <tr>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>Ball-in-Play %</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~70%</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>TBD</td>
-            <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>TBD</td>
+            <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~75.5%</td>
           </tr>
           <tr>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>Average Pitches</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~3.9</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>TBD</td>
-            <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>TBD</td>
+            <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~3.35</td>
           </tr>
           <tr>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>First-Pitch Strike %</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~60%</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>TBD</td>
-            <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>TBD</td>
+            <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~74.5%</td>
           </tr>
         </tbody>
       </table>
@@ -84,14 +84,14 @@ const ModelDocs = () => {
       <h3>Swing/Take Model</h3>
       <p>Type: Long Short-Term Memory (LSTM) </p>
       <p>Summary: The swing and take model utilizes the results from our Pitch type and location models to predict whether or not a batter will swing or take on a given pitch. The model was trained on the actual statcast dataset before being tested on the output dataset from our models for improved accuracy.</p>
-      <a href="https://github.com/At-Bat-Simulator/SDP-Team-65-/tree/main/Offensive%20Models/swingtake" target="_blank" rel="noreferrer">
+      <a href="https://github.com/At-Bat-Simulator/SDP-Team-65-/blob/main/Offensive%20Models/swingtake/README.md" target="_blank" rel="noreferrer">
         View on GitHub
       </a>
 
       <h3>Launch Angle/Exit Velocity Model</h3>
       <p>Type: Long Short-Term Memory (LSTM) </p>
       <p>Summary: This model uses a LSTM to predict the exit velocity and launch angle of a hit. It uses the location of the pitch, the type of pitch, the swing angle and other features to calculate where, how fast and how far the baseball would go after making contact with a bat.</p>
-      <a href="https://github.com/At-Bat-Simulator/SDP-Team-65-/tree/main/Offensive%20Models/EV_and_LA" target="_blank" rel="noreferrer">
+      <a href="https://github.com/At-Bat-Simulator/SDP-Team-65-/blob/main/Offensive%20Models/EV_classification/README.md" target="_blank" rel="noreferrer">
         View on GitHub
       </a>
 
