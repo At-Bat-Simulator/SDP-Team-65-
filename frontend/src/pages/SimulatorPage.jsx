@@ -828,12 +828,12 @@ export default function SimulatorPage() {
 
             {atBatOver && (
               <div
-                className={`atbat-result-banner ${atBatOver === "fair" && FAIR_OUTS.has(currentPitch?.hitType) ? "fair-out" : atBatOver}`}
+                className={`atbat-result-banner ${atBatOver === "fair" && FAIR_OUTS.has(pitches[pitches.length - 1]?.hitType) ? "fair-out" : atBatOver}`}
               >
                 {atBatOver === "strikeout_swinging" && "Strikeout Swinging!"}
                 {atBatOver === "strikeout_looking" && "Strikeout Looking!"}
                 {atBatOver === "walk" && "Walk!"}
-                {atBatOver === "fair" && prettyHitType(currentPitch?.hitType)}
+                {atBatOver === "fair" && prettyHitType(pitches[pitches.length - 1]?.hitType)}
               </div>
             )}
 
