@@ -22,7 +22,6 @@ const ModelDocs = () => {
           <tr style={{ backgroundColor: '#1a1a1a', textAlign: 'left' }}>
             <th style={{ padding: '12px', borderBottom: '2px solid #555' }}>Statistic</th>
             <th style={{ padding: '12px', borderBottom: '2px solid #555' }}>MLB Average (Statcast)</th>
-            <th style={{ padding: '12px', borderBottom: '2px solid #555' }}>Our Model (200 At-Bats Simulated)</th>
             <th style={{ padding: '12px', borderBottom: '2px solid #555' }}>Our Model (500 At-Bats Simulated)</th>         
           </tr>
         </thead>
@@ -30,37 +29,31 @@ const ModelDocs = () => {
           <tr>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>Swing %</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~47%</td>
-            <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>TBD</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>59.3%</td>
           </tr>
           <tr>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>Walk %</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~9%</td>
-            <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>TBD</td>
-            <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~1.5%</td>
+            <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~7%</td>
           </tr>
           <tr>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>Strikeout % (K%)</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~23%</td>
-            <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>TBD</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~22.9%</td>
           </tr>
           <tr>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>Ball-in-Play %</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~70%</td>
-            <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>TBD</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~75.5%</td>
           </tr>
           <tr>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>Average Pitches</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~3.9</td>
-            <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>TBD</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~3.35</td>
           </tr>
           <tr>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>First-Pitch Strike %</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~60%</td>
-            <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>TBD</td>
             <td style={{ padding: '12px', borderBottom: '1px solid #444' }}>~74.5%</td>
           </tr>
         </tbody>
