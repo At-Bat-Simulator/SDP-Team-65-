@@ -86,26 +86,28 @@ Dense(n_classes, softmax)                  → pitch type probability distributi
 
 ## Performance
 
-Evaluating model...
-Test Accuracy: 41.25%
-19311/19311 ━━━━━━━━━━━━━━━━━━━━ 97s 5ms/step    
+
+Test Accuracy: 40.93%
+19912/19912 ━━━━━━━━━━━━━━━━━━━━ 100s 5ms/step   
 
 Classification Report:
               precision    recall  f1-score   support
 
-          CH       0.29      0.24      0.27     67218
-          CU       0.27      0.13      0.18     42218
-          FC       0.30      0.46      0.36     41673
-          FF       0.51      0.54      0.52    227668
-          FO       0.44      0.03      0.05      1197
-          FS       0.35      0.39      0.37     16003
-          SI       0.40      0.46      0.43     78583
-          SL       0.41      0.29      0.34     97200
-          ST       0.35      0.44      0.39     46176
+          CH       0.31      0.24      0.27     67395
+          CU       0.31      0.09      0.14     51154
+          FC       0.31      0.28      0.29     41788
+          FF       0.47      0.57      0.52    231496
+          FO       0.50      0.00      0.01      1197
+          FS       0.33      0.31      0.32     16486
+          SI       0.39      0.47      0.43     80436
+          SL       0.39      0.34      0.36    101032
+          ST       0.35      0.41      0.38     46181
 
-    accuracy                           0.41    617936
-   macro avg       0.37      0.33      0.32    617936
-weighted avg       0.41      0.41      0.41    617936
+    accuracy                           0.41    637165
+   macro avg       0.37      0.30      0.30    637165
+weighted avg       0.40      0.41      0.39    637165
+
+
 
 
 **Context:** Predicting pitch type in baseball is inherently noisy — even MLB scouts with full game film and advance reports don't achieve much higher accuracy. The model performs well on high-frequency pitch types (FF, SI, FC) and shows lower performance on rarer or more situational pitches (CU, ST) due to class imbalance in the data.

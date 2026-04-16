@@ -336,9 +336,21 @@ def predict_next(
                 "This also indicates mixed artifacts. Re-copy the full set of location artifacts from the same run."
             )
 
+    # Merge deprecated pitch type labels into their canonical equivalents
+    # so previous_pitch_* one-hot columns align with the retrained model's features.
+    PREV_PITCH_MERGE = {"KC": "CU", "SV": "SL", "FA": "FF", "CS": "CU", "SF": "FS"}
+    sw = serving_window.copy()
+    for old_pt, new_pt in PREV_PITCH_MERGE.items():
+        old_col = f"previous_pitch_{old_pt}"
+        new_col = f"previous_pitch_{new_pt}"
+        if old_col in sw.columns:
+            if new_col in sw.columns:
+                sw[new_col] = sw[new_col] + sw[old_col]
+            sw = sw.drop(columns=[old_col])
+
     # Build feature matrices aligned to training features
-    sub_pt  = ensure_columns(serving_window.copy(), pt_features)
-    sub_loc = ensure_columns(serving_window.copy(), loc_features)
+    sub_pt  = ensure_columns(sw, pt_features)
+    sub_loc = ensure_columns(sw, loc_features)
 
     # Pass DataFrames (not .values) so the scaler sees the feature names it was fitted with
     PT_CONTINUOUS = ["balls", "strikes", "outs_when_up", "inning", "score_diff", "previous_zone"]

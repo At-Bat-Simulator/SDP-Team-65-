@@ -29,7 +29,11 @@ def preprocess(df):
     ]
 
     PITCH_MERGE = {
-        "SF": "FS",  # split-finger -> splitter family (optional)
+    "SF": "FS",  # split-finger -> splitter family
+    "KC": "CU",  # knuckle curve -> curveball (Statcast relabeled ~2023)
+    "SV": "SL",  # slurve -> slider family
+    "FA": "FF",  # generic fastball -> four-seam
+    "CS": "CU",  # slow curve -> curveball
     }
 
     df["pitch_type"] = df["pitch_type"].astype(str).str.upper().replace(PITCH_MERGE)

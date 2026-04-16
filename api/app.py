@@ -34,8 +34,11 @@ def to_py(x):
 # Keep repertoire pitch codes consistent with training (e.g., FO -> FS)
 PITCH_MERGE = {
     "SF": "FS",  # split-finger -> splitter family
-    "KC": "CU",  # knuckle curve -> curveball (Statcast relabeled KC->CU ~2023)
-}
+    "KC": "CU",  # knuckle curve -> curveball (Statcast relabeled ~2023)
+    "SV": "SL",  # slurve -> slider family
+    "FA": "FF",  # generic fastball -> four-seam
+    "CS": "CU",  # slow curve -> curveball
+    }
 
 def norm_pitch_type(pt: str) -> str:
     pt = str(pt).upper().strip()
