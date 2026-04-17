@@ -689,18 +689,18 @@ export default function SimulatorPage() {
                   pitcher?.throws === "L"
                     ? pitcherPhase === "windup"
                       ? pitcherLeftWindup
-                      : pitcherPhase === "throwing"
+                      : pitcherPhase === "throwing" || pitcherPhase === "transitioning"
                         ? pitcherLeftThrow
                         : pitcherLeftSet
                     : pitcherPhase === "windup"
                       ? pitcherRightWindup
-                      : pitcherPhase === "throwing"
+                      : pitcherPhase === "throwing" || pitcherPhase === "transitioning"
                         ? pitcherRightThrow
                         : pitcherRightSet
                 }
                 alt="Pitcher silhouette"
                 style={{
-                  ...(pitcherPhase === "windup" || pitcherPhase === "throwing"
+                  ...(pitcherPhase === "windup" || pitcherPhase === "throwing" || pitcherPhase === "transitioning"
                     ? {
                         filter: "invert(1) contrast(1000%)",
                         mixBlendMode: "screen",
