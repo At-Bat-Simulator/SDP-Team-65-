@@ -525,9 +525,14 @@ export default function SimulatorPage() {
 
       // Brief invisible phase hides the throwing→set SVG swap (prevents
       // the black-on-white flash that occurs when filter is removed at the
-      // same time as the src changes).
+      // same time as the src changes). Two rAF calls guarantee the browser
+      // has fully painted the opacity-0 frame before we switch to "set".
       setPitcherPhase("transitioning");
-      setTimeout(() => setPitcherPhase("set"), 60);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setPitcherPhase("set");
+        });
+      });
     }, 20 + TRAVEL_MS);
 
     animTimersRef.current = [t2];
