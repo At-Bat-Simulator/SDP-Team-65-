@@ -523,12 +523,13 @@ export default function SimulatorPage() {
           result.includes("fair"),
       );
 
-      // Brief invisible phase hides the throwing→set SVG swap (prevents
-      // the black-on-white flash that occurs when filter is removed at the
-      // same time as the src changes). Two rAF calls guarantee the browser
-      // has fully painted the opacity-0 frame before we switch to "set".
+      // 3-step transition to prevent the black-on-white flash:
+      //   "transitioning" → opacity 0, same SVG+filter (only opacity changes)
+      //   "pre-set"       → set SVG, no filter, still opacity 0 (src/blend change while invisible)
+      //   "set"           → opacity 1 (only opacity changes, no blend-mode destruction flash)
       setPitcherPhase("transitioning");
       requestAnimationFrame(() => {
+        setPitcherPhase("pre-set");
         requestAnimationFrame(() => {
           setPitcherPhase("set");
         });
@@ -711,7 +712,7 @@ export default function SimulatorPage() {
                         mixBlendMode: "screen",
                       }
                     : {}),
-                  opacity: pitcherPhase === "transitioning" ? 0 : 1,
+                  opacity: pitcherPhase === "transitioning" || pitcherPhase === "pre-set" ? 0 : 1,
                   height:
                     pitcherPhase === "windup"
                       ? "180px"
