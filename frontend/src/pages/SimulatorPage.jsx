@@ -523,7 +523,11 @@ export default function SimulatorPage() {
           result.includes("fair"),
       );
 
-      setPitcherPhase("set");
+      // Brief invisible phase hides the throwing→set SVG swap (prevents
+      // the black-on-white flash that occurs when filter is removed at the
+      // same time as the src changes).
+      setPitcherPhase("transitioning");
+      setTimeout(() => setPitcherPhase("set"), 60);
     }, 20 + TRAVEL_MS);
 
     animTimersRef.current = [t2];
@@ -696,12 +700,13 @@ export default function SimulatorPage() {
                 }
                 alt="Pitcher silhouette"
                 style={{
-                  ...(pitcherPhase !== "set"
+                  ...(pitcherPhase === "windup" || pitcherPhase === "throwing"
                     ? {
                         filter: "invert(1) contrast(1000%)",
                         mixBlendMode: "screen",
                       }
                     : {}),
+                  opacity: pitcherPhase === "transitioning" ? 0 : 1,
                   height:
                     pitcherPhase === "windup"
                       ? "180px"
