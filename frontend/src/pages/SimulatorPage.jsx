@@ -523,16 +523,13 @@ export default function SimulatorPage() {
           result.includes("fair"),
       );
 
-      // 3-step transition to prevent the black-on-white flash:
-      //   "transitioning" → opacity 0, same SVG+filter (only opacity changes)
-      //   "pre-set"       → set SVG, no filter, still opacity 0 (src/blend change while invisible)
-      //   "set"           → opacity 1 (only opacity changes, no blend-mode destruction flash)
-      setPitcherPhase("transitioning");
+      // Remove the pitcher from the DOM for one frame so the mix-blend-mode
+      // GPU layer is fully destroyed before the set SVG is painted.
+      // opacity/visibility tricks still flash because the compositor fires
+      // before JS changes land; unmounting the element is the only sure fix.
+      setPitcherPhase("hiding");
       requestAnimationFrame(() => {
-        setPitcherPhase("pre-set");
-        requestAnimationFrame(() => {
-          setPitcherPhase("set");
-        });
+        setPitcherPhase("set");
       });
     }, 20 + TRAVEL_MS);
 
@@ -689,38 +686,39 @@ export default function SimulatorPage() {
           <div className="zone-stack">
             {/* top pitcher */}
             <div className="pitcher-slot">
-              <img
-                className="silhouette pitcher-silhouette"
-                src={
-                  pitcher?.throws === "L"
-                    ? pitcherPhase === "windup"
-                      ? pitcherLeftWindup
-                      : pitcherPhase === "throwing" || pitcherPhase === "transitioning"
-                        ? pitcherLeftThrow
-                        : pitcherLeftSet
-                    : pitcherPhase === "windup"
-                      ? pitcherRightWindup
-                      : pitcherPhase === "throwing" || pitcherPhase === "transitioning"
-                        ? pitcherRightThrow
-                        : pitcherRightSet
-                }
-                alt="Pitcher silhouette"
-                style={{
-                  ...(pitcherPhase === "windup" || pitcherPhase === "throwing" || pitcherPhase === "transitioning"
-                    ? {
-                        filter: "invert(1) contrast(1000%)",
-                        mixBlendMode: "screen",
-                      }
-                    : {}),
-                  opacity: pitcherPhase === "transitioning" || pitcherPhase === "pre-set" ? 0 : 1,
-                  height:
-                    pitcherPhase === "windup"
-                      ? "180px"
-                      : pitcherPhase === "throwing"
-                        ? "120px"
-                        : undefined,
-                }}
-              />
+              {pitcherPhase !== "hiding" && (
+                <img
+                  className="silhouette pitcher-silhouette"
+                  src={
+                    pitcher?.throws === "L"
+                      ? pitcherPhase === "windup"
+                        ? pitcherLeftWindup
+                        : pitcherPhase === "throwing"
+                          ? pitcherLeftThrow
+                          : pitcherLeftSet
+                      : pitcherPhase === "windup"
+                        ? pitcherRightWindup
+                        : pitcherPhase === "throwing"
+                          ? pitcherRightThrow
+                          : pitcherRightSet
+                  }
+                  alt="Pitcher silhouette"
+                  style={{
+                    ...(pitcherPhase === "windup" || pitcherPhase === "throwing"
+                      ? {
+                          filter: "invert(1) contrast(1000%)",
+                          mixBlendMode: "screen",
+                        }
+                      : {}),
+                    height:
+                      pitcherPhase === "windup"
+                        ? "180px"
+                        : pitcherPhase === "throwing"
+                          ? "120px"
+                          : undefined,
+                  }}
+                />
+              )}
             </div>
 
             {/* batter silhouette – rendered inside zone-world to avoid grid conflicts */}
