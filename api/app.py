@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
 
@@ -145,10 +145,15 @@ print("pt_scaler n_features_in_:", getattr(ART["pt_scaler_X"], "n_features_in_",
 print("Loading serving table...")
 SERVING_DF = load_serving_table(SERVING_TABLE_PATH)
 
+import psutil, os
+process = psutil.Process(os.getpid())
+print(f"Memory usage: {process.memory_info().rss / 1024 ** 2:.0f} MB")
+
 REPERTOIRE_MAP = build_repertoire_map(SERVING_DF)
 VELOCITY_MAP = build_velocity_map(SERVING_DF)
 
 print("Built repertoire map for", len(REPERTOIRE_MAP), "pitchers")
+
 
 ART["repertoire_map"] = REPERTOIRE_MAP
 
@@ -370,6 +375,15 @@ def api_matchup_history():
         traceback.print_exc()
         return jsonify({"error": str(e), "pitches": [], "found": False}), 500
 
+
+FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "../frontend/dist")
+
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def serve_frontend(path):
+    if path and os.path.exists(os.path.join(FRONTEND_DIST, path)):
+        return send_from_directory(FRONTEND_DIST, path)
+    return send_from_directory(FRONTEND_DIST, "index.html")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

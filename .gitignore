@@ -16,7 +16,6 @@ statcast_full_2025.csv
 
 # Node
 frontend/node_modules/
-frontend/dist/
 
 # Old/unused model directories (not referenced by the API)
 Old models/
