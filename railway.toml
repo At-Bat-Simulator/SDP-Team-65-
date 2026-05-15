@@ -1,3 +1,2 @@
 [deploy]
-healthcheckPath = "/api/players"
 restartPolicyType = "on_failure"
