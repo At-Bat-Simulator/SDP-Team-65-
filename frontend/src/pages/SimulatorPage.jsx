@@ -536,16 +536,7 @@ export default function SimulatorPage() {
           result.includes("fair"),
       );
 
-      // Remove the pitcher from the DOM for one frame so the mix-blend-mode
-      // GPU layer is fully destroyed before the set SVG is painted.
-      // opacity/visibility tricks still flash because the compositor fires
-      // before JS changes land; unmounting the element is the only sure fix.
-      setPitcherPhase("hiding");
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setPitcherPhase("set");
-        });
-      });
+      setPitcherPhase("set");
     }, 20 + TRAVEL_MS);
 
     animTimersRef.current = [t2];
@@ -700,40 +691,34 @@ export default function SimulatorPage() {
         <div className="sim-center">
           <div className="zone-stack">
             {/* top pitcher */}
-            <div className="pitcher-slot">
-              {pitcherPhase !== "hiding" && (
-                <img
-                  className="silhouette pitcher-silhouette"
-                  src={
-                    pitcher?.throws === "L"
-                      ? pitcherPhase === "windup"
-                        ? pitcherLeftWindup
-                        : pitcherPhase === "throwing"
-                          ? pitcherLeftThrow
-                          : pitcherLeftSet
-                      : pitcherPhase === "windup"
-                        ? pitcherRightWindup
-                        : pitcherPhase === "throwing"
-                          ? pitcherRightThrow
-                          : pitcherRightSet
-                  }
-                  alt="Pitcher silhouette"
-                  style={{
-                    ...(pitcherPhase === "windup" || pitcherPhase === "throwing"
-                      ? {
-                          filter: "invert(1) contrast(1000%)",
-                          mixBlendMode: "screen",
-                        }
-                      : {}),
-                    height:
-                      pitcherPhase === "windup"
-                        ? "180px"
-                        : pitcherPhase === "throwing"
-                          ? "120px"
-                          : undefined,
-                  }}
-                />
-              )}
+            <div className="pitcher-slot" style={{ position: "relative" }}>
+              {/* Set pose — no mix-blend-mode, always in DOM */}
+              <img
+                className="silhouette pitcher-silhouette"
+                src={pitcher?.throws === "L" ? pitcherLeftSet : pitcherRightSet}
+                alt="Pitcher silhouette"
+                style={{ opacity: pitcherPhase === "set" ? 1 : 0 }}
+              />
+              {/* Windup/throwing — always has mix-blend-mode, always in DOM */}
+              <img
+                className="silhouette pitcher-silhouette"
+                src={
+                  pitcher?.throws === "L"
+                    ? pitcherPhase === "throwing" ? pitcherLeftThrow : pitcherLeftWindup
+                    : pitcherPhase === "throwing" ? pitcherRightThrow : pitcherRightWindup
+                }
+                alt=""
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  opacity: pitcherPhase === "set" ? 0 : 1,
+                  filter: "invert(1) contrast(1000%)",
+                  mixBlendMode: "screen",
+                  height: pitcherPhase === "windup" ? "180px" : "120px",
+                }}
+              />
             </div>
 
             {/* batter silhouette – rendered inside zone-world to avoid grid conflicts */}
