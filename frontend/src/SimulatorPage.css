@@ -387,6 +387,7 @@
   user-select: none;
   -webkit-user-drag: none;
   -webkit-tap-highlight-color: transparent;
+  animation: pitcher-fadein 150ms ease-out;
 }
 
 /* Horizontal position is set via inline style using xToPx(X_MIN/X_MAX),

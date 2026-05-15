@@ -124,6 +124,19 @@ export default function SimulatorPage() {
   }
 
   const { pitcher, batter, outs, offScore, defScore, inning, bases } = state;
+
+  // Preload all silhouette SVGs into the browser cache on mount so they
+  // render instantly when each phase/pose is first needed.
+  useEffect(() => {
+    [
+      pitcherLeftSet, pitcherRightSet,
+      pitcherLeftWindup, pitcherRightWindup,
+      pitcherLeftThrow, pitcherRightThrow,
+      batterLeftB, batterRightB,
+      batterLeftSwing, batterRightSwing,
+    ].forEach((src) => { const img = new Image(); img.src = src; });
+  }, []);
+
   const [isSwinging, setIsSwinging] = useState(false);
   const [pitcherPhase, setPitcherPhase] = useState("set"); // "set" | "windup" | "throwing"
   const [atBatOver, setAtBatOver] = useState(null); // null | "walk" | "strikeout" | "fair"
@@ -742,7 +755,7 @@ export default function SimulatorPage() {
                    fullH = zoneRect.height / 0.40
                    top   = zoneRect.top - fullH * 0.30  (shift up by the head region)
               */}
-              {zoneRect.height > 0 &&
+              {zoneSize.w > 0 &&
                 (() => {
                   const fullH = zoneRect.height / 0.3;
                   const imgTop = zoneRect.top - fullH * 0.4;
