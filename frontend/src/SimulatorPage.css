@@ -367,6 +367,12 @@
   object-position: bottom center;
   mix-blend-mode: normal;
   filter: none;
+  animation: pitcher-fadein 80ms ease-out;
+}
+
+@keyframes pitcher-fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* Batter silhouette: absolutely positioned beside the zone-world box.

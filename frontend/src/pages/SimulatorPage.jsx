@@ -529,7 +529,9 @@ export default function SimulatorPage() {
       // before JS changes land; unmounting the element is the only sure fix.
       setPitcherPhase("hiding");
       requestAnimationFrame(() => {
-        setPitcherPhase("set");
+        requestAnimationFrame(() => {
+          setPitcherPhase("set");
+        });
       });
     }, 20 + TRAVEL_MS);
 
