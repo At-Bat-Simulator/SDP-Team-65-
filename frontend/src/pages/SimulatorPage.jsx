@@ -282,14 +282,17 @@ export default function SimulatorPage() {
     if (pitchLoading) return; //belt-and-suspenders guard
     setPitchLoading(true);
     animatePitcher();
+    const windupDone = new Promise((res) => setTimeout(res, 500));
+
     // if we're not at the end of history, just move forward
     if (pitchIndex < pitches.length - 1) {
+      await windupDone;
       setPitchIndex(pitchIndex + 1);
       return;
     }
 
-    // Try model first (and log the returned JSON/keys)
-    const api = await fetchModelPitch();
+    // Wait for both the API response AND the windup to finish before showing the ball
+    const [api] = await Promise.all([fetchModelPitch(), windupDone]);
 
     if (api && api.context_label) {
       setContextLabel(api.context_label);
