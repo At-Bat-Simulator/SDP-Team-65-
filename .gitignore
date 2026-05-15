@@ -8,6 +8,7 @@ venv/
 
 # Training data — large, not needed for serving
 *.npy
+artifacts/serving/serving_table.parquet
 statcast_full_2024.csv
 statcast_full_2023.csv
 statcast_full_2022.csv
