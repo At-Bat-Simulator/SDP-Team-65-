@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: sdp-team-65-api
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: pip install -r api/requirements.txt
+    startCommand: cd api && gunicorn app:app --workers 1 --timeout 120
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0

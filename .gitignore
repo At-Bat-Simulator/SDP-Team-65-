@@ -1,11 +1,35 @@
-.prettierignore
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
+.venv/
+
+# Training data — large, not needed for serving
+*.npy
 statcast_full_2024.csv
 statcast_full_2023.csv
 statcast_full_2022.csv
 statcast_full_2021.csv
 statcast_full_2025.csv
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Old/unused model directories (not referenced by the API)
+Old models/
+Offensive Models/artifacts/
+Offensive Models/pitch_location_model.keras
+
+# Raw data & scripts
+csv data/
+scripts/
+
+# Internal tooling
+.claude/worktrees/
+
+# OS
 .DS_Store
-__pycache__/
-*.pyc
-*.npy
-artifacts/serving/serving_table.parquet
+.prettierignore
