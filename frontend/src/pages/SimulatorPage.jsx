@@ -129,12 +129,20 @@ export default function SimulatorPage() {
   // render instantly when each phase/pose is first needed.
   useEffect(() => {
     [
-      pitcherLeftSet, pitcherRightSet,
-      pitcherLeftWindup, pitcherRightWindup,
-      pitcherLeftThrow, pitcherRightThrow,
-      batterLeftB, batterRightB,
-      batterLeftSwing, batterRightSwing,
-    ].forEach((src) => { const img = new Image(); img.src = src; });
+      pitcherLeftSet,
+      pitcherRightSet,
+      pitcherLeftWindup,
+      pitcherRightWindup,
+      pitcherLeftThrow,
+      pitcherRightThrow,
+      batterLeftB,
+      batterRightB,
+      batterLeftSwing,
+      batterRightSwing,
+    ].forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
   }, []);
 
   const [isSwinging, setIsSwinging] = useState(false);
@@ -707,8 +715,12 @@ export default function SimulatorPage() {
                 className="silhouette pitcher-silhouette"
                 src={
                   pitcher?.throws === "L"
-                    ? pitcherPhase === "throwing" ? pitcherLeftThrow : pitcherLeftWindup
-                    : pitcherPhase === "throwing" ? pitcherRightThrow : pitcherRightWindup
+                    ? pitcherPhase === "throwing"
+                      ? pitcherLeftThrow
+                      : pitcherLeftWindup
+                    : pitcherPhase === "throwing"
+                      ? pitcherRightThrow
+                      : pitcherRightWindup
                 }
                 alt=""
                 style={{
@@ -845,7 +857,8 @@ export default function SimulatorPage() {
                 {atBatOver === "strikeout_swinging" && "Strikeout Swinging!"}
                 {atBatOver === "strikeout_looking" && "Strikeout Looking!"}
                 {atBatOver === "walk" && "Walk!"}
-                {atBatOver === "fair" && prettyHitType(pitches[pitches.length - 1]?.hitType)}
+                {atBatOver === "fair" &&
+                  prettyHitType(pitches[pitches.length - 1]?.hitType)}
               </div>
             )}
 
@@ -856,7 +869,7 @@ export default function SimulatorPage() {
                   <button
                     className="btn primary"
                     onClick={onNextPitch}
-                    disabled={pitchLoading}
+                    disabled={pitchLoading || zoneSize.w === 0}
                   >
                     Next Pitch
                   </button>
